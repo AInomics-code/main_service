@@ -1,0 +1,60 @@
+# Env
+venv/
+.env/
+.env
+.env.local
+.env.*.backup
+
+# Dep
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.db
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+logs/
+*.pid
+*.seed
+*.state
+
+# Cache
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+coverage.xml
+*.cover
+*.coverage
+*.pytest_cache
+
+# Build
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+MANIFEST
+*.manifest
+*.spec
+
+# Git
+*.swp
+*.swo
+*.orig
+
+# Editor
+*.~*
+*.bak
+*.tmp
+*.swp
+*.swn
+*.swo
+*~
