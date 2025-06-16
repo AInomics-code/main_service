@@ -1,66 +1,123 @@
-from fastapi import Request
+# rest/agents/la_dona.py
 import logging
-from ..tools.database_tool import DatabaseTool
+import uuid
+import redis
+
+from fastapi import Request
 from langchain.agents import initialize_agent, AgentType
 from langchain.chat_models import ChatOpenAI
-import os
+from langchain.memory import RedisChatMessageHistory, ConversationBufferMemory
+from langchain.prompts import MessagesPlaceholder
+
+from ..tools.database_tool import DatabaseTool
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# Initialize LLM with API key from settings
+# ──────────────────────────────────────────────────────────────────────────────
+# 1. MODELO LLM
+# ──────────────────────────────────────────────────────────────────────────────
+# Modelo más rápido pero con limitaciones en herramientas
+# llm = ChatOpenAI(
+#     model="gpt-3.5-turbo",
+#     temperature=0,
+#     openai_api_key=settings.OPENAI_KEY
+# )
+
+# Modelo más preciso y con mejor soporte para herramientas
 llm = ChatOpenAI(
-    model="gpt-4", 
+    model="gpt-4",
     temperature=0,
-    openai_api_key=settings.OPENAI_KEY
+    openai_api_key=settings.OPENAI_KEY,
+    request_timeout=30,  # Timeout más corto para respuestas más rápidas
+    max_retries=2,      # Menos reintentos para fallar más rápido si hay problemas
+    streaming=False     # Desactivar streaming para respuestas más directas
 )
 
-# Initialize database tool with LLM
+# ──────────────────────────────────────────────────────────────────────────────
+# 2. TOOLS
+# ──────────────────────────────────────────────────────────────────────────────
 db_tool = DatabaseTool(llm=llm)
 
+# ──────────────────────────────────────────────────────────────────────────────
+# 3. PROMPT DEL AGENTE
+# ──────────────────────────────────────────────────────────────────────────────
+SYSTEM_MESSAGE = """You are a professional retail analyst with expertise in sales performance, customer insights, and product analytics.
+Your role is to serve sales departments and management teams by providing data-driven insights and actionable recommendations.
+
+IMPORTANT: You have access to the chat history. When a question refers to previous information (using words like 'ese', 'ese mes', 'antes', etc.), 
+you MUST check the chat history to understand the context. The chat history is available to you in the 'chat_history' variable.
+
+Always respond in the same language as the query."""
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 4. FUNCIÓN PRINCIPAL
+# ──────────────────────────────────────────────────────────────────────────────
 async def process(request: Request):
+    """
+    Endpoint handler que recibe:
+    {
+        "query": "pregunta del usuario",
+        "context_id": "uuid-opcional"
+    }
+    Devuelve:
+    {
+        "response": "respuesta del agente",
+        "context_id": "uuid"
+    }
+    """
     try:
         body = await request.json()
-        logger.debug(f"Received request body: {body}")
-        
-        # Get the query from the request body
-        query = body.get("query")
+        logger.debug("Request body: %s", body)
+
+        query: str | None = body.get("query")
+        context_id: str | None = body.get("context_id")
+
         if not query:
             return {"error": "No query provided in request body"}
 
-        tools = db_tool.get_tools()
-        
-        prompt_prefix = """
-You are a professional retail analyst with expertise in sales performance, customer insights, and product analytics.
-Your role is to serve sales departments and management teams by providing data-driven insights and actionable recommendations.
-Always base your responses on concrete data and analytics, presenting findings in a professional and courteous manner.
-Structure your responses to include: key findings, data-backed insights, and specific next steps or recommendations for action.
-Maintain a respectful, helpful, and service-oriented approach in all interactions.
-Communicate complex analytics in clear business language that sales teams and executives can immediately understand and act upon.
+        if not context_id:
+            context_id = str(uuid.uuid4())
 
-IMPORTANT: Never show technical IDs or database identifiers in your responses. Always look for and present descriptive information such as:
-- Customer names instead of customer IDs
-- Product names, categories, or descriptions instead of product IDs  
-- Store names or locations instead of store IDs
-- Any other human-readable identifiers instead of technical codes
-When presenting data, focus on meaningful business identifiers that managers and sales teams can recognize and act upon.
+        try:
+            redis_client = redis.Redis(host="localhost", port=6379, db=0)
+            redis_client.ping()
+        except redis.ConnectionError as exc:
+            logger.error("Redis connection error: %s", exc)
+            return {"error": "Redis unavailable"}
 
-Always respond in the same language as the query to ensure clear communication with your stakeholders.
-"""
-
-        agent_executor = initialize_agent(
-            tools=tools,
-            llm=llm,
-            agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=False,
-            handle_parsing_errors=True,
-            agent_kwargs={"prefix": prompt_prefix}
+        message_history = RedisChatMessageHistory(
+            url="redis://localhost:6379",
+            session_id=context_id,
+            ttl=86_400
         )
 
-        # Execute the agent with the query from the request
-        response = agent_executor.run(query)
-        
-        return {"response": response}
-    except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
-        return {"error": str(e)}
+        memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True,
+            chat_memory=message_history
+        )
+
+        agent = initialize_agent(
+            tools=db_tool.get_tools(),
+            llm=llm,
+            agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
+            memory=memory,
+            verbose=True,
+            handle_parsing_errors=True,
+            agent_kwargs={
+                "system_message": SYSTEM_MESSAGE,
+                "extra_prompt_messages": [MessagesPlaceholder(variable_name="chat_history")]
+            }
+        )
+
+        response = agent.run(input=query)
+
+        return {
+            "response": response,
+            "context_id": context_id
+        }
+
+    except Exception as exc:
+        logger.exception("Unexpected error: %s", exc)
+        return {"error": str(exc)}
