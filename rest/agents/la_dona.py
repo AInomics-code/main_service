@@ -9,7 +9,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.memory import RedisChatMessageHistory, ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 
-from ..tools.database_tool import DatabaseTool
+from ..tools.mysql_database_tool import MySQLDatabaseTool
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ llm = ChatOpenAI(
 # ──────────────────────────────────────────────────────────────────────────────
 # 2. TOOLS
 # ──────────────────────────────────────────────────────────────────────────────
-db_tool = DatabaseTool(llm=llm)
+db_tool = MySQLDatabaseTool(llm=llm)
 schema_json = db_tool.get_cached_schema_json()
 
 # ──────────────────────────────────────────────────────────────────────────────
