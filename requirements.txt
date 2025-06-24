@@ -7,3 +7,4 @@ pymysql==1.1.1
 openai==1.86.0
 redis==6.2.0
 boto3==1.38.36
+langdetect==1.0.9

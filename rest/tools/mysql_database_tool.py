@@ -1,5 +1,5 @@
-from langchain.utilities import SQLDatabase
-from langchain.agents.agent_toolkits import SQLDatabaseToolkit
+from langchain_community.utilities import SQLDatabase
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
 import os
 import json
 from typing import Optional, Dict, List, Any
