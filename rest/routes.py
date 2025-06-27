@@ -1,7 +1,8 @@
-from fastapi import APIRouter
-
-from rest.agents.routes import router as agents_router
+from fastapi import APIRouter, Request
+from rest.invocation import invoke_agent
 
 router = APIRouter(prefix="/api/v1")
 
-router.include_router(agents_router, tags=["Agents"])
+@router.post("/invoke")
+async def invoke(request: Request):
+    return await invoke_agent(request)
