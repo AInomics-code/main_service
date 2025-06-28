@@ -2,7 +2,7 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from agents.task_classifier.agent import TaskClassifierAgent
 
@@ -54,7 +54,6 @@ def test_task_classifier():
         print("-" * 80)
 
 def interactive_test():
-    """Modo interactivo para probar el agente"""
     agent = TaskClassifierAgent()
     
     print("=== Modo Interactivo - TaskClassifierAgent ===")
