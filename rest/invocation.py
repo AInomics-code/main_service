@@ -1,6 +1,6 @@
 from fastapi import Request
 from pydantic import BaseModel
-from agents.graph import ParallelAgentGraph
+from agents.graph import DynamicAgentGraph
 
 class UserRequest(BaseModel):
     message: str
@@ -10,7 +10,7 @@ async def invoke_agent(request: Request):
         body = await request.json()
         user_request = UserRequest(**body)
         
-        graph = ParallelAgentGraph()
+        graph = DynamicAgentGraph()
         
         result = graph.process(user_request.message)
         

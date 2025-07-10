@@ -12,11 +12,12 @@ class SupervisorAgent:
         )
         self.prompt = ChatPromptTemplate.from_template(SUPERVISOR_PROMPT)
     
-    def combine_results(self, user_input: str, task_category: str, detected_language: str) -> str:
+    def combine_results(self, user_input: str, pipeline_plan: str, detected_language: str, agent_results: str) -> str:
         chain = self.prompt | self.llm
         response = chain.invoke({
             "user_input": user_input,
-            "task_category": task_category,
-            "detected_language": detected_language
+            "pipeline_plan": pipeline_plan,
+            "detected_language": detected_language,
+            "agent_results": agent_results
         })
         return response.content.strip() 
