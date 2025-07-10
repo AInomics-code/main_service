@@ -10,3 +10,4 @@ redis==6.2.0
 boto3==1.38.36
 langdetect==1.0.9
 langchain_openai==0.3.25
+pyodbc==5.2.0
