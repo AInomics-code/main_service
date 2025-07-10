@@ -10,7 +10,7 @@ from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import MessagesPlaceholder
 
-from ..tools.mysql_database_tool import MySQLDatabaseTool
+from ..tools.sqlserver_database_tool import SQLServerDatabaseTool
 from ..prompts.la_dona_prompt import get_system_message, build_schema_context
 from config.settings import settings
 
@@ -28,7 +28,7 @@ def detect_lang(text: str) -> str:
 # 1. MODELO LLM
 # ──────────────────────────────────────────────────────────────────────────────
 llm = ChatOpenAI(
-    model="gpt-4o-mini",
+    model="gpt-4.1",
     temperature=0,
     openai_api_key=settings.OPENAI_KEY,
     request_timeout=30,  # Timeout más corto para respuestas más rápidas
@@ -39,7 +39,7 @@ llm = ChatOpenAI(
 # ──────────────────────────────────────────────────────────────────────────────
 # 2. TOOLS
 # ──────────────────────────────────────────────────────────────────────────────
-db_tool = MySQLDatabaseTool(llm=llm)
+db_tool = SQLServerDatabaseTool(llm=llm)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 3. PROMPT DEL AGENTE
