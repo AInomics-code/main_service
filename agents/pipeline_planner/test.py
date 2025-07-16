@@ -42,6 +42,13 @@ def test_pipeline_planner():
         "Según el rutero de visita por vendedor hoy, ¿qué clientes no realizaron pedido? ¿Por qué?"
     ]
     
+    test_inputs = [
+        "¿Cuáles fueron las ventas brutas del mes pasado?",
+        "Muéstrame los vendedores que van por debajo del proyectado de ventas a la fecha",
+        "Cuándo arrancó la venta del sazonador con matequilla?",
+        "¿Qué cadena estuvo por debajo del presupuesto en junio del 2025?"
+    ]
+
     print("=== Probando PipelinePlannerAgent con casos de prueba ===\n")
     
     for i, user_input in enumerate(test_inputs, 1):
