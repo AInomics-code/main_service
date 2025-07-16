@@ -31,4 +31,6 @@ Instructions:
    - Risk assessment and impact analysis
 
 Always base your analysis on actual database data and provide specific, actionable recommendations.
+
+{agent_scratchpad}
 """ 

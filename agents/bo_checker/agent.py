@@ -2,6 +2,8 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.agent_toolkits.sql.base import create_sql_agent
 from langchain.agents.agent_types import AgentType
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain.tools import tool
 from .prompt import BO_CHECKER_PROMPT
 from config.settings import settings
 from ..registry import BaseAgent, register_agent
@@ -22,35 +24,32 @@ class BOCheckerAgent(BaseAgent):
         # Get database schema from cache
         self.database_schema = self.db_tool.get_cached_schema_json()
         
-        # print(self.database_schema)
-        
-        # Create SQL agent with database tools
-        self.sql_agent = create_sql_agent(
-            llm=self.llm,
-            toolkit=self.db_tool,
-            agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=False
-        )
-        
         # Create prompt template with database schema
         self.prompt = ChatPromptTemplate.from_template(BO_CHECKER_PROMPT)
+        
+        # Create custom agent with database tools and our prompt
+        self.agent = create_openai_tools_agent(
+            llm=self.llm,
+            tools=self.db_tool.get_tools(),
+            prompt=self.prompt
+        )
+        
+        # Create agent executor
+        self.agent_executor = AgentExecutor(
+            agent=self.agent,
+            tools=self.db_tool.get_tools(),
+            verbose=False
+        )
     
     def run(self, user_input: str) -> str:
         """Método estándar que implementa la interfaz BaseAgent"""
         try:
-            # First, try to use the SQL agent for database queries
-            if any(keyword in user_input.lower() for keyword in ['back order', 'backorder', 'inventory', 'stock', 'order', 'delivery']):
-                # Use SQL agent for database-related queries
-                response = self.sql_agent.invoke({"input": user_input})
-                return response.get("output", "No se pudo obtener respuesta de la base de datos.")
-            else:
-                # Use regular prompt for general questions
-                chain = self.prompt | self.llm
-                response = chain.invoke({
-                    "user_input": user_input,
-                    "database_schema": str(self.database_schema)
-                })
-                return response.content.strip()
+            # Use our custom agent with the database schema
+            response = self.agent_executor.invoke({
+                "user_input": user_input,
+                "database_schema": str(self.database_schema)
+            })
+            return response.get("output", "No se pudo obtener respuesta de la base de datos.")
         except Exception as e:
             return f"Error al procesar la consulta: {str(e)}"
     
