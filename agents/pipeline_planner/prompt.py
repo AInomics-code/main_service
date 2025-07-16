@@ -48,7 +48,7 @@ AGENT CATALOG  (ground truth — do not change)
   ✘ Do NOT use for sales / revenue questions.
 
 • BOChecker
-  ➤ Detailed back-order list (may run parallel with InventoryChecker).
+  ➤ Backorder analysis (may run parallel with InventoryChecker).
 
 • ClientListLoader
   ➤ Client coverage / census questions.
