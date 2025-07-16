@@ -1,8 +1,10 @@
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain.agents import AgentExecutor, create_openai_tools_agent
 from .prompt import STRATEGIST_PROMPT
 from config.settings import settings
 from ..registry import BaseAgent, register_agent
+from tools.sqlserver_database_tool import SQLServerDatabaseTool
 
 @register_agent("Strategist")
 class StrategistAgent(BaseAgent):
@@ -12,24 +14,51 @@ class StrategistAgent(BaseAgent):
             temperature=0.3,
             openai_api_key=settings.OPENAI_KEY
         )
+        
+        # Initialize SQL Server database tool
+        self.db_tool = SQLServerDatabaseTool(llm=self.llm)
+        
+        # Get database schema from cache
+        self.database_schema = self.db_tool.get_cached_schema_json()
+        
+        # Create prompt template with database schema
         self.prompt = ChatPromptTemplate.from_template(STRATEGIST_PROMPT)
+        
+        # Create custom agent with database tools and our prompt
+        self.agent = create_openai_tools_agent(
+            llm=self.llm,
+            tools=self.db_tool.get_tools(),
+            prompt=self.prompt
+        )
+        
+        # Create agent executor
+        self.agent_executor = AgentExecutor(
+            agent=self.agent,
+            tools=self.db_tool.get_tools(),
+            verbose=True
+        )
     
     def run(self, user_input: str) -> str:
         """Método estándar que implementa la interfaz BaseAgent"""
-        # Para el strategist, necesitamos manejar los resultados de otros agentes
-        # Por ahora, usamos un placeholder
-        chain = self.prompt | self.llm
-        response = chain.invoke({
-            "user_input": user_input,
-            "agent_results": "Resultados de agentes previos"
-        })
-        return response.content.strip()
+        try:
+            # Use our custom agent with the database schema
+            response = self.agent_executor.invoke({
+                "user_input": user_input,
+                "database_schema": str(self.database_schema),
+                "agent_results": "Resultados de agentes previos"
+            })
+            return response.get("output", "No se pudo obtener respuesta de la base de datos.")
+        except Exception as e:
+            return f"Error al procesar la consulta: {str(e)}"
     
     def synthesize_results(self, user_input: str, agent_results: str) -> str:
         """Método específico para síntesis de resultados"""
-        chain = self.prompt | self.llm
-        response = chain.invoke({
-            "user_input": user_input,
-            "agent_results": agent_results
-        })
-        return response.content.strip() 
+        try:
+            response = self.agent_executor.invoke({
+                "user_input": user_input,
+                "database_schema": str(self.database_schema),
+                "agent_results": agent_results
+            })
+            return response.get("output", "No se pudo sintetizar los resultados.")
+        except Exception as e:
+            return f"Error al sintetizar resultados: {str(e)}" 

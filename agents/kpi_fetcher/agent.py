@@ -38,7 +38,7 @@ class KPIFetcherAgent(BaseAgent):
         self.agent_executor = AgentExecutor(
             agent=self.agent,
             tools=self.db_tool.get_tools(),
-            verbose=False
+            verbose=True
         )
     
     def run(self, user_input: str) -> str:

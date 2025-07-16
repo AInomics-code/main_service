@@ -43,10 +43,7 @@ def test_pipeline_planner():
     ]
     
     test_inputs = [
-        "¿Cuáles fueron las ventas brutas del mes pasado?",
-        "Muéstrame los vendedores que van por debajo del proyectado de ventas a la fecha",
-        "Cuándo arrancó la venta del sazonador con matequilla?",
-        "¿Qué cadena estuvo por debajo del presupuesto en junio del 2025?"
+        "cual es el costo total del backorder del mes de enero del 2024?"
     ]
 
     print("=== Probando PipelinePlannerAgent con casos de prueba ===\n")
