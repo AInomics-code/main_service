@@ -31,6 +31,12 @@ class SQLServerDatabaseTool:
         
         self.db = SQLDatabase.from_uri(self.db_url)
         self.llm = llm
+        
+        # Create the actual toolkit
+        self.toolkit = SQLDatabaseToolkit(db=self.db, llm=self.llm)
+        
+        # Set dialect for compatibility with create_sql_agent
+        self.dialect = "mssql"
     
     def get_tools(self):
         """
@@ -41,7 +47,7 @@ class SQLServerDatabaseTool:
         """
         if not self.llm:
             raise ValueError("Language model (llm) must be provided before getting tools")
-        return SQLDatabaseToolkit(db=self.db, llm=self.llm).get_tools()
+        return self.toolkit.get_tools()
     
     def get_db(self):
         """
