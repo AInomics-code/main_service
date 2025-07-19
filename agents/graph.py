@@ -57,7 +57,7 @@ class DynamicAgentGraph:
         except Exception as e:
             return {
                 "pipeline_plan": {
-                    "pipeline": [["FallbackLLMAgent"]],
+                    "pipeline": [["StrategyAgent"]],
                     "error": f"Error en pipeline planner: {str(e)}"
                 }
             }
@@ -84,7 +84,7 @@ class DynamicAgentGraph:
                     }
                 }
             
-            pipeline = pipeline_plan.get("pipeline", [["FallbackLLMAgent"]])
+            pipeline = pipeline_plan.get("pipeline", [["StrategyAgent"]])
             results = []
             
             # Ejecutar cada paso del pipeline
@@ -97,8 +97,8 @@ class DynamicAgentGraph:
                         if agent_exists(agent_name):
                             agent = get_agent(agent_name)
                             
-                            # Para el strategist, pasamos los resultados anteriores
-                            if agent_name == "Strategist":
+                            # Para el StrategyAgent, pasamos los resultados anteriores
+                            if agent_name == "StrategyAgent":
                                 result = agent.synthesize_results(user_input, str(results))
                             else:
                                 result = agent.run(user_input)

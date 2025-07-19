@@ -15,21 +15,21 @@ class PipelinePlannerAgent:
     
     def _validate_and_fix_pipeline(self, pipeline: list) -> list:
         if not pipeline or not isinstance(pipeline, list):
-            return [["FallbackLLMAgent"]]
+            return [["StrategyAgent"]]
         
         if len(pipeline) == 1 and len(pipeline[0]) == 1:
             single_agent = pipeline[0][0]
-            if single_agent in ["LookupAgent", "FallbackLLMAgent"]:
+            if single_agent in ["StrategyAgent"]:
                 return pipeline
         
         last_step = pipeline[-1] if pipeline else []
-        has_strategist = "Strategist" in last_step
+        has_strategy = "StrategyAgent" in last_step
         
-        if not has_strategist:
-            if last_step and any(agent != "Strategist" for agent in last_step):
-                pipeline.append(["Strategist"])
+        if not has_strategy:
+            if last_step and any(agent != "StrategyAgent" for agent in last_step):
+                pipeline.append(["StrategyAgent"])
             else:
-                pipeline[-1] = ["Strategist"]
+                pipeline[-1] = ["StrategyAgent"]
         
         return pipeline
     
@@ -42,7 +42,7 @@ class PipelinePlannerAgent:
                 result = json.loads(response.content.strip())
                 if "pipeline" not in result:
                     return {
-                        "pipeline": [["FallbackLLMAgent"]],
+                        "pipeline": [["StrategyAgent"]],
                         "error": "Respuesta no contiene clave 'pipeline'"
                     }
                 
@@ -52,12 +52,12 @@ class PipelinePlannerAgent:
             except json.JSONDecodeError:
                 print(f"Error: {response.content}")
                 return {
-                    "pipeline": [["FallbackLLMAgent"]],
+                    "pipeline": [["StrategyAgent"]],
                     "error": "No se pudo parsear la respuesta como JSON"
                 }
                 
         except Exception as e:
             return {
-                "pipeline": [["FallbackLLMAgent"]],
+                "pipeline": [["StrategyAgent"]],
                 "error": f"Error en el agente: {str(e)}"
             } 
