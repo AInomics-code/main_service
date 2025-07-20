@@ -1,0 +1,6 @@
+TABLA: corregimientos
+DESCRIPCIÓN: Tabla que contiene los corregimientos disponibles
+
+COLUMNAS:
+- codigo_de_corregimiento (nvarchar): Código único del corregimiento
+- nombre_de_corregimiento (nvarchar): Nombre del corregimiento

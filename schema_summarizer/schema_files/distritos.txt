@@ -1,0 +1,6 @@
+TABLA: distritos
+DESCRIPCIÓN: Tabla que contiene los distritos disponibles
+
+COLUMNAS:
+- codigo_de_distrito (nvarchar): Código único del distrito
+- nombre_de_distrito (nvarchar): Nombre del distrito

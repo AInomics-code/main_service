@@ -1,0 +1,6 @@
+TABLA: categorias
+DESCRIPCIÓN: Tabla que contiene las categorías de productos
+
+COLUMNAS:
+- codigo_de_categoria (nvarchar): Código único de la categoría
+- nombre_de_categoria (nvarchar): Nombre de la categoría

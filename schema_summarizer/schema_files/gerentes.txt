@@ -1,0 +1,8 @@
+TABLA: gerentes
+DESCRIPCIÓN: Tabla que contiene información de los gerentes
+
+COLUMNAS:
+- codigo_de_gerente (nvarchar): Código único del gerente
+- nombre_de_gerente (nvarchar): Nombre del gerente
+- email (nvarchar): Email del gerente
+- telefono (nvarchar): Teléfono del gerente

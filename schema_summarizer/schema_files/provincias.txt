@@ -1,0 +1,6 @@
+TABLA: provincias
+DESCRIPCIÓN: Tabla que contiene las provincias disponibles
+
+COLUMNAS:
+- codigo_de_provincia (nvarchar): Código único de la provincia
+- nombre_de_provincia (nvarchar): Nombre de la provincia

@@ -1,0 +1,6 @@
+TABLA: tipos
+DESCRIPCIÓN: Tabla que contiene los tipos de productos
+
+COLUMNAS:
+- codigo_de_tipo (nvarchar): Código único del tipo
+- nombre_de_tipo (nvarchar): Nombre del tipo

@@ -1,0 +1,51 @@
+TABLA: clientes
+DESCRIPCIÓN: Tabla principal de clientes del sistema con información completa de contacto y comercial
+
+COLUMNAS:
+- codigo_de_cliente (nvarchar): Código único del cliente
+- codigo_de_grupo (nvarchar): Código del grupo al que pertenece el cliente
+- nombre_de_cliente (nvarchar): Nombre del cliente
+- direccion (nvarchar): Dirección física del cliente
+- dia_de_recibo (nvarchar): Día preferido para recibir pedidos
+- hora_de_recibo (nvarchar): Hora preferida para recibir pedidos
+- ciudad (nvarchar): Ciudad del cliente
+- pais (nvarchar): País del cliente
+- mercaderista (nvarchar): Mercaderista asignado al cliente
+- telefono1 (nvarchar): Teléfono principal
+- telefono2 (nvarchar): Teléfono secundario
+- fecha_de_inactivo (nvarchar): Fecha en que el cliente se volvió inactivo
+- telefono_para_recibo (nvarchar): Teléfono para recibir pedidos
+- codigo_de_provincia (nvarchar): Código de la provincia
+- inicia_atencion_trade (nvarchar): Hora de inicio de atención trade
+- fin_de_atencion_trade (nvarchar): Hora de fin de atención trade
+- codigo_de_distrito (nvarchar): Código del distrito
+- contacto (nvarchar): Nombre del contacto principal
+- codigo_de_corregimiento (nvarchar): Código del corregimiento
+- codigo_de_vendedor (nvarchar): Código del vendedor asignado
+- paga_impuesto (nvarchar): Indica si el cliente paga impuestos
+- limite_de_credito (numeric): Límite de crédito del cliente
+- condicion_de_pago (nvarchar): Condición de pago del cliente
+- dias_para_morosidad (int): Días para considerar morosidad
+- cuenta (nvarchar): Número de cuenta del cliente
+- ruc (nvarchar): RUC del cliente
+- digito_verificador (nvarchar): Dígito verificador del RUC
+- estado (nvarchar): Estado del cliente (activo/inactivo)
+- fecha_de_creacion (datetime): Fecha de creación del cliente
+- precio_de_lista (nvarchar): Tipo de precio de lista del cliente
+- email (nvarchar): Email del cliente
+- codigo_supervisor_trade (nvarchar): Código del supervisor trade
+- saldo (numeric): Saldo actual del cliente
+- codigo_de_tipo_de_negocio (nvarchar): Código del tipo de negocio
+- compra_al_detal (nvarchar): Indica si compra al detalle
+- codigo_de_ruta (nvarchar): Código de la ruta asignada
+- latitud (float): Latitud geográfica del cliente
+- longitud (float): Longitud geográfica del cliente
+- codigo_de_gestor_de_cobros (nvarchar): Código del gestor de cobros
+- codigo_de_pais (nvarchar): Código del país
+- razon_social (nvarchar): Razón social del cliente
+- tipo_de_receptor (nvarchar): Tipo de receptor fiscal
+- codigo_de_cliente_de_enlace (nvarchar): Código del cliente de enlace
+- codigo_de_gerente (nvarchar): Código del gerente asignado
+- centro_de_distribucion (nvarchar): Centro de distribución asignado
+- fecha_ultima_venta (datetime): Fecha de la última venta
+- fecha_ultima_devolucion (datetime): Fecha de la última devolución

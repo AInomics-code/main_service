@@ -1,0 +1,6 @@
+TABLA: paises
+DESCRIPCIÓN: Tabla que contiene información de los países
+
+COLUMNAS:
+- codigo_de_paises (nvarchar): Código único del país
+- nombre_de_pais (nvarchar): Nombre del país

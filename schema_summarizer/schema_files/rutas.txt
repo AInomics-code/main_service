@@ -1,0 +1,10 @@
+TABLA: rutas
+DESCRIPCIÓN: Tabla que contiene información de las rutas de venta
+
+COLUMNAS:
+- codigo_de_ruta (nvarchar): Código único de la ruta
+- nombre_de_ruta (nvarchar): Nombre de la ruta
+- codigo_de_vendedor (nvarchar): Código del vendedor asignado a la ruta
+- dia_visita (nvarchar): Día de visita de la ruta
+- frecuencia (int): Frecuencia de visita
+- semana (int): Semana de la ruta

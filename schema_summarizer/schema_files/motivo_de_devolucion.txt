@@ -1,0 +1,7 @@
+TABLA: motivo_de_devolucion
+DESCRIPCIÓN: Tabla que contiene los motivos de devolución
+
+COLUMNAS:
+- codigo_de_motivo_de_devolucion (nvarchar): Código único del motivo de devolución
+- nombre_de_motivo_de_devolucion (nvarchar): Nombre del motivo de devolución
+- es_gasto (nvarchar): Indica si es un gasto

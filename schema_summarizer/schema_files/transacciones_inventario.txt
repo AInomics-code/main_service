@@ -1,0 +1,19 @@
+TABLA: transacciones_inventario
+DESCRIPCIÓN: Tabla que registra las transacciones de inventario
+
+COLUMNAS:
+- documento (nvarchar): Número de documento de la transacción
+- fecha (datetime): Fecha de la transacción
+- tipo_de_transaccion (nvarchar): Tipo de transacción de inventario
+- cantidad (numeric): Cantidad de la transacción
+- costo (numeric): Costo de la transacción
+- codigo_de_producto (nvarchar): Código del producto
+- codigo_de_proveedor (nvarchar): Código del proveedor
+- codigo_de_deposito (nvarchar): Código del depósito
+- factor_de_conversion (numeric): Factor de conversión
+- lote (nvarchar): Número de lote
+- fecha_de_vencimiento (datetime): Fecha de vencimiento
+- fecha_de_produccion (datetime): Fecha de producción
+- clasificacion_de_ajuste (nvarchar): Clasificación del ajuste
+- cantidad_contada_en_el_inventario_fisico (float): Cantidad contada en inventario físico
+- consecutivo (numeric): Número consecutivo

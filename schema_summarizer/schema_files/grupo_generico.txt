@@ -1,0 +1,7 @@
+TABLA: grupo_generico
+DESCRIPCIÓN: Tabla que contiene los grupos genéricos de productos
+
+COLUMNAS:
+- codigo_de_grupo_generico (numeric): Código único del grupo genérico
+- nombre_de_grupo_generico (nvarchar): Nombre del grupo genérico
+- unidad_de_medida (nvarchar): Unidad de medida del grupo genérico

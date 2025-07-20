@@ -1,0 +1,19 @@
+TABLA: vendedores
+DESCRIPCIÓN: Tabla que contiene información de los vendedores
+
+COLUMNAS:
+- codigo_de_vendedor (nvarchar): Código único del vendedor
+- nombre_de_vendedor (nvarchar): Nombre del vendedor
+- cedula (nvarchar): Cédula del vendedor
+- codigo_de_provincia (nvarchar): Código de la provincia
+- codigo_de_distrito (nvarchar): Código del distrito
+- codigo_de_corregimiento (nvarchar): Código del corregimiento
+- email (nvarchar): Email del vendedor
+- telefono (nvarchar): Teléfono del vendedor
+- codigo_de_jefe (nvarchar): Código del jefe del vendedor
+- codigo_de_ruta (nvarchar): Código de la ruta asignada
+- codigo_de_gerente (nvarchar): Código del gerente
+- codigo_de_supervisor (nvarchar): Código del supervisor
+- fecha_ultima_venta (datetime): Fecha de la última venta
+- fecha_ultima_devolucion (datetime): Fecha de la última devolución
+- estado (nvarchar): Estado del vendedor

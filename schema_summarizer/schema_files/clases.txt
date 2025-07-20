@@ -1,0 +1,8 @@
+TABLA: clases
+DESCRIPCIÓN: Tabla que define las clases de productos dentro de las categorías
+
+COLUMNAS:
+- codigo_de_clase (nvarchar): Código único de la clase
+- nombre_de_clase (nvarchar): Nombre de la clase
+- codigo_de_tipo (nvarchar): Código del tipo asociado
+- codigo_de_categoria (nvarchar): Código de la categoría a la que pertenece

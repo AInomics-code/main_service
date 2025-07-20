@@ -1,0 +1,7 @@
+TABLA: impuestos
+DESCRIPCIÓN: Tabla que contiene información de los impuestos
+
+COLUMNAS:
+- codigo_de_impuesto (nvarchar): Código único del impuesto
+- nombre_de_impuesto (nvarchar): Nombre del impuesto
+- porcentaje_de_impuesto (float): Porcentaje del impuesto

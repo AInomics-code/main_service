@@ -1,0 +1,10 @@
+TABLA: depositos
+DESCRIPCIÓN: Tabla que contiene información de los depósitos o almacenes
+
+COLUMNAS:
+- codigo_de_deposito (nvarchar): Código único del depósito
+- nombre_de_deposito (nvarchar): Nombre del depósito
+- direccion (nvarchar): Dirección del depósito
+- ciudad (nvarchar): Ciudad donde se encuentra el depósito
+- telefono (nvarchar): Teléfono del depósito
+- gerente (nvarchar): Gerente responsable del depósito

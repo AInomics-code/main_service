@@ -1,0 +1,7 @@
+TABLA: tipos_de_negocio
+DESCRIPCIÓN: Tabla que contiene los tipos de negocio
+
+COLUMNAS:
+- codigo_de_tipo_de_negocio (nvarchar): Código único del tipo de negocio
+- nombre_de_tipo_de_negocio (nvarchar): Nombre del tipo de negocio
+- codigo_de_canal (nvarchar): Código del canal asociado

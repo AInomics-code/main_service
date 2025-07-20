@@ -1,0 +1,33 @@
+TABLA: ventas
+DESCRIPCIÓN: Tabla principal de ventas. Usa esta tabla cuando quieras analizar las ventas por periodo. La venta bruta es igual a la sumatoria de la columnas importe_de_la_linea menos la sumatoria de descuento_de_la_linea
+
+COLUMNAS:
+- documento (nvarchar): Número de documento de venta
+- fecha (datetime): Fecha de la venta
+- codigo_de_vendedor (nvarchar): Código del vendedor que realizó la venta
+- tipo_de_transaccion (nvarchar): Tipo de transacción (venta, devolución, etc.)
+- cantidad (numeric): Cantidad vendida
+- precio (numeric): Precio unitario
+- costo (numeric): Costo unitario
+- codigo_de_cliente (nvarchar): Código del cliente
+- codigo_de_producto (nvarchar): Código del producto vendido
+- porcentaje_de_descuento (numeric): Porcentaje de descuento aplicado
+- porcentaje_de_impuesto (numeric): Porcentaje de impuesto aplicado
+- codigo_de_deposito (nvarchar): Código del depósito de origen
+- factor_de_conversion (numeric): Factor de conversión de unidades
+- porcentaje_de_descuento_adicional (numeric): Porcentaje de descuento adicional
+- descuento_de_la_linea (numeric): Monto del descuento de la línea
+- impuesto_de_la_linea (numeric): Monto del impuesto de la línea
+- importe_de_la_linea (numeric): Importe total de la línea
+- costo_de_la_linea (numeric): Costo total de la línea
+- descuento_adicional_de_la_linea (numeric): Descuento adicional de la línea
+- monto_de_la_linea (numeric): Monto final de la línea
+- lote (nvarchar): Número de lote del producto
+- codigo_de_motivo_de_devolucion (nvarchar): Código del motivo de devolución
+- documento_fiscal (nvarchar): Número de documento fiscal
+- serie_fiscal (nvarchar): Serie del documento fiscal
+- monto_impuesto_fiscal (numeric): Monto del impuesto fiscal
+- monto_fiscal (numeric): Monto total fiscal
+- codigo_de_transportista (nvarchar): Código del transportista
+- fecha_de_vencimiento (datetime): Fecha de vencimiento del producto
+- fecha_de_produccion (datetime): Fecha de producción del producto

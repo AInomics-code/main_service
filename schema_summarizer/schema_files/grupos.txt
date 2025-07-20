@@ -1,0 +1,6 @@
+TABLA: grupos
+DESCRIPCIÓN: Tabla que contiene los grupos de clientes
+
+COLUMNAS:
+- codigo_de_grupo (nvarchar): Código único del grupo
+- nombre_de_grupo (nvarchar): Nombre del grupo

@@ -1,0 +1,12 @@
+TABLA: productos_por_deposito
+DESCRIPCIÓN: Tabla que relaciona productos con depósitos y maneja inventario
+
+COLUMNAS:
+- codigo_de_producto (nvarchar): Código del producto
+- codigo_de_deposito (nvarchar): Código del depósito
+- ubicacion1 (nvarchar): Ubicación 1 del producto en el depósito
+- ubicacion2 (nvarchar): Ubicación 2 del producto en el depósito
+- existencia (numeric): Cantidad existente en el depósito
+- cantidad_separada (numeric): Cantidad separada para pedidos
+- inventario_madre (numeric): Inventario madre del producto
+- codigo_de_area_de_despacho (numeric): Código del área de despacho

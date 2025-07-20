@@ -1,0 +1,24 @@
+TABLA: backorder
+DESCRIPCIÓN: Tabla que registra los pedidos pendientes o backorders del sistema
+
+COLUMNAS:
+- numero_de_pedsido (nvarchar): Número único del pedido
+- fecha_de_pedido (datetime): Fecha en que se realizó el pedido
+- codigo_de_cliente (nvarchar): Código del cliente que realizó el pedido
+- codigo_de_vendedor (nvarchar): Código del vendedor asignado
+- numero_de_factura (nvarchar): Número de factura asociado
+- linea (int): Número de línea del pedido
+- codigo_de_producto (nvarchar): Código del producto solicitado
+- cantidad_perdida (numeric): Cantidad perdida del pedido
+- cantidad_entregada (numeric): Cantidad ya entregada
+- cantidad_pendiente (numeric): Cantidad pendiente por entregar
+- precio (numeric): Precio unitario del producto
+- porcentaje_de_descuento (numeric): Porcentaje de descuento aplicado
+- codigo_de_tipo (nvarchar): Código del tipo de producto
+- porcentaje_de_impuesto (numeric): Porcentaje de impuesto aplicado
+- codigo_de_deposito (nvarchar): Código del depósito de origen
+- codigo_de_clase (nvarchar): Código de la clase del producto
+- factor_de_conversion (int): Factor de conversión de unidades
+- costo (numeric): Costo unitario del producto
+- fecha_de_la_factura (datetime): Fecha de la factura
+- codigo_supervisor_trade (nvarchar): Código del supervisor trade

@@ -1,0 +1,6 @@
+TABLA: canales
+DESCRIPCIÓN: Tabla que define los diferentes canales de venta
+
+COLUMNAS:
+- codigo_de_canal (nvarchar): Código único del canal
+- nombre_de_canal (nvarchar): Nombre descriptivo del canal

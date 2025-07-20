@@ -1,0 +1,6 @@
+TABLA: area_de_despacho
+DESCRIPCIÓN: Tabla que contiene las áreas de despacho disponibles en el sistema
+
+COLUMNAS:
+- codigo_de_area_de_despacho (numeric): Código único identificador del área de despacho
+- descripcion (nvarchar): Descripción o nombre del área de despacho

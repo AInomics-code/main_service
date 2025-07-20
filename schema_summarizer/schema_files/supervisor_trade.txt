@@ -1,0 +1,8 @@
+TABLA: supervisor_trade
+DESCRIPCIÓN: Tabla que contiene información de los supervisores trade
+
+COLUMNAS:
+- codigo_supervisor_trade (nvarchar): Código único del supervisor trade
+- nombre_supervisor_trade (nvarchar): Nombre del supervisor trade
+- email (nvarchar): Email del supervisor trade
+- telefono (nvarchar): Teléfono del supervisor trade
