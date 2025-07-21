@@ -1,5 +1,13 @@
 TABLA: provincias
-DESCRIPCIÓN: Tabla que contiene las provincias disponibles
+DESCRIPCIÓN: Tabla que contiene las provincias disponibles. Usa esta tabla cuando quieras analizar datos geográficos o filtrar por provincia.
+
+REGLAS DE NEGOCIO:
+- Cada provincia tiene un código único que se usa como referencia en otras tablas
+- Las provincias están relacionadas con países específicos
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantas provincias tenemos?
+- Cuales son las provincias disponibles?
 
 COLUMNAS:
 - codigo_de_provincia (nvarchar): Código único de la provincia

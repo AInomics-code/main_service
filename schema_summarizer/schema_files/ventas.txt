@@ -1,6 +1,40 @@
 TABLA: ventas
 DESCRIPCIÓN: Tabla principal de ventas. Usa esta tabla cuando quieras analizar las ventas por periodo. La venta bruta es igual a la sumatoria de la columnas importe_de_la_linea menos la sumatoria de descuento_de_la_linea
 
+REGLAS DE NEGOCIO:
+- Si el usuario te pide totalizar las ventas no debes tener en cuenta los datos donde tipo_de_transaccion sea igual a devolucion
+- El usuario puede llamar a los deposito como cadenas. Si te piden totalizar por cadena se refiere a totalizar por codigo_de_deposito
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- De cuanto fueron las ventas del ultimo mes?
+- Cual es el vendedor con mas ventas del 2024?
+- Cuales fueron las ventas por cadena
+- ¿Qué cadena está por debajo del presupuesto?
+- ¿Qué producto no se vendió el día de ayer / por semana / por punto de venta (PDV)?
+- De las promociones scanner ofrecidas el mes anterior, ¿cuál fue la más vendida?
+- ¿Qué productos están decreciendo o creciendo vs el mes/trimestre/año pasado?
+- ¿Cuál es el producto más vendido por cadena?
+- ¿Qué productos sugieres descatalogar por poca venta?
+- ¿Cómo va el crecimiento en ventas vs el año pasado por cadena?
+- ¿Cómo va el crecimiento en ventas vs el año pasado de los clientes de exportación? ¿Y de EPA?
+- ¿Cuál es la rentabilidad por SKU?
+- ¿Cuánto están creciendo los productos de maquilas de la cadena X vs el año pasado?
+- ¿Cuánto va la facturación hoy?
+- ¿Qué clientes se han facturado hoy?
+- Muéstrame los vendedores que van por debajo del proyectado de ventas a la fecha
+- Cuál es la venta por producto a la fecha, cuáles productos están por debajo de la proyección de ventas
+- ¿Cuándo arrancó la venta de determinado producto?
+- Cuáles son los productos que vienen decreciendo en los últimos 2 años
+- Dime los productos que llevan 3 o más meses sin venta
+- Muéstrame el 80/20 de los productos en dólares y cajas
+- Dame el top-25 de los clientes que más compran determinado producto
+- Dame la venta x Clases e indícame cuáles vienen decreciendo (periodo determinado)
+- Dame la venta por clases-cadenas (periodo determinado)
+- Dime los clientes nuevos y cuánto aportan a la venta
+- Muéstrame la venta de maquilas de determinada Cadena y por Productos
+- Muéstrame las ventas, notas de crédito y ajustes de los clientes de exportación
+- Dime los clientes semanales que compran por debajo de 10 dólares por día
+
 COLUMNAS:
 - documento (nvarchar): Número de documento de venta
 - fecha (datetime): Fecha de la venta

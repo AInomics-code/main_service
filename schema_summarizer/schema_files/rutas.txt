@@ -1,5 +1,19 @@
 TABLA: rutas
-DESCRIPCIÓN: Tabla que contiene información de las rutas de venta
+DESCRIPCIÓN: Tabla que contiene información de las rutas de venta. Usa esta tabla cuando quieras analizar rutas de venta, asignación de vendedores o programación de visitas.
+
+REGLAS DE NEGOCIO:
+- Cada ruta tiene un vendedor asignado específico
+- Las rutas tienen días de visita y frecuencia definidos
+- Las rutas se organizan por semanas para planificación
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantas rutas tenemos activas?
+- Cual es el vendedor con mas rutas?
+- Que rutas visitan los lunes?
+- ¿Qué ruta tiene el vendedor X hoy?
+- ¿Cuántos PDVs debería atender un vendedor por día según ruta/venta?
+- Según rutero de visita por vendedor hoy, ¿qué clientes no realizaron pedido? ¿Por qué?
+- Cuántos PDV debería atender un Mercaderista por día según ruta/venta?
 
 COLUMNAS:
 - codigo_de_ruta (nvarchar): Código único de la ruta

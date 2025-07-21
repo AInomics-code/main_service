@@ -1,5 +1,14 @@
 TABLA: tipos_de_negocio
-DESCRIPCIÓN: Tabla que contiene los tipos de negocio
+DESCRIPCIÓN: Tabla que contiene los tipos de negocio. Usa esta tabla cuando quieras analizar clientes por tipo de negocio o estrategias comerciales.
+
+REGLAS DE NEGOCIO:
+- Cada tipo de negocio tiene un código único
+- Los tipos de negocio están asociados a canales específicos
+- Ayuda a segmentar clientes para estrategias comerciales
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos tipos de negocio tenemos?
+- Cuales son los tipos de negocio por canal?
 
 COLUMNAS:
 - codigo_de_tipo_de_negocio (nvarchar): Código único del tipo de negocio

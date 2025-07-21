@@ -1,5 +1,16 @@
 TABLA: clases
-DESCRIPCIÓN: Tabla que define las clases de productos dentro de las categorías
+DESCRIPCIÓN: Tabla que define las clases de productos dentro de las categorías. Usa esta tabla cuando quieras analizar productos por clase o estructura de categorías.
+
+REGLAS DE NEGOCIO:
+- Cada clase tiene un código único
+- Las clases están asociadas a tipos y categorías
+- Ayuda a segmentar productos para reportes
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantas clases de productos existen?
+- Cuales son las clases con mas productos?
+- Dame la venta x Clases e indícame cuáles vienen decreciendo (periodo determinado)
+- Dame la venta por clases-cadenas (periodo determinado)
 
 COLUMNAS:
 - codigo_de_clase (nvarchar): Código único de la clase

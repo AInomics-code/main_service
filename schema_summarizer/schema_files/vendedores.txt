@@ -1,5 +1,23 @@
 TABLA: vendedores
-DESCRIPCIÓN: Tabla que contiene información de los vendedores
+DESCRIPCIÓN: Tabla que contiene información de los vendedores. Usa esta tabla cuando quieras analizar vendedores, ventas por vendedor o estructura de ventas.
+
+REGLAS DE NEGOCIO:
+- Solo los vendedores con estado 'activo' deben considerarse para ventas
+- Cada vendedor tiene un jefe y supervisor asignado
+- Los vendedores están asignados a rutas específicas
+- Las fechas de última venta y devolución ayudan a medir actividad
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos vendedores activos tenemos?
+- Cual es el vendedor con mas ventas?
+- Que vendedores no han vendido en el ultimo mes?
+- Durante esta última quincena/mes/trimestre, ¿cuáles vendedores han llegado tarde?
+- ¿Cuántos PDVs debería atender un vendedor por día según ruta/venta?
+- ¿Qué ruta tiene el vendedor X hoy?
+- Durante esta última quincena/mes/trim cuáles Mercaderistas han llegado tarde
+- Cuántos PDV debería atender un Mercaderista por día según ruta/venta?
+- Facilítame el número de extensión/celular/correo electrónico de X colaborador
+- Indícame la efectividad de visitas de los últimos 3 días
 
 COLUMNAS:
 - codigo_de_vendedor (nvarchar): Código único del vendedor

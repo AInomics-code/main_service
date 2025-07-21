@@ -1,5 +1,14 @@
 TABLA: area_de_despacho
-DESCRIPCIÓN: Tabla que contiene las áreas de despacho disponibles en el sistema
+DESCRIPCIÓN: Tabla que contiene las áreas de despacho disponibles en el sistema. Usa esta tabla cuando quieras analizar áreas de despacho o organización logística.
+
+REGLAS DE NEGOCIO:
+- Cada área de despacho tiene un código único
+- Las áreas de despacho se usan para organizar productos en depósitos
+- Ayuda a optimizar el proceso de picking y despacho
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantas areas de despacho tenemos?
+- Cuales son las areas de despacho disponibles?
 
 COLUMNAS:
 - codigo_de_area_de_despacho (numeric): Código único identificador del área de despacho

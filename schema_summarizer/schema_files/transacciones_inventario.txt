@@ -1,5 +1,16 @@
 TABLA: transacciones_inventario
-DESCRIPCIÓN: Tabla que registra las transacciones de inventario
+DESCRIPCIÓN: Tabla que registra las transacciones de inventario. Usa esta tabla cuando quieras analizar movimientos de inventario, ajustes o trazabilidad de productos.
+
+REGLAS DE NEGOCIO:
+- Las transacciones de inventario afectan la existencia en productos_por_deposito
+- Los productos con maneja_lotes requieren número de lote
+- Las fechas de vencimiento son obligatorias para productos perecederos
+- Los ajustes de inventario físico deben ser justificados
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuales fueron los movimientos de inventario del ultimo mes?
+- Que productos tuvieron mas ajustes?
+- Cuales son las transacciones por tipo?
 
 COLUMNAS:
 - documento (nvarchar): Número de documento de la transacción

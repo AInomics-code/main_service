@@ -1,5 +1,13 @@
 TABLA: grupos
-DESCRIPCIÓN: Tabla que contiene los grupos de clientes
+DESCRIPCIÓN: Tabla que contiene los grupos de clientes. Usa esta tabla cuando quieras analizar agrupaciones de clientes o segmentación comercial.
+
+REGLAS DE NEGOCIO:
+- Cada grupo tiene un código único
+- Los grupos agrupan clientes para análisis y reportes
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos grupos de clientes existen?
+- Cuales son los grupos con más clientes?
 
 COLUMNAS:
 - codigo_de_grupo (nvarchar): Código único del grupo

@@ -1,5 +1,13 @@
 TABLA: grupo_generico
-DESCRIPCIÓN: Tabla que contiene los grupos genéricos de productos
+DESCRIPCIÓN: Tabla que contiene los grupos genéricos de productos. Usa esta tabla cuando quieras analizar agrupaciones generales de productos.
+
+REGLAS DE NEGOCIO:
+- Cada grupo genérico tiene un código único
+- Los grupos genéricos agrupan productos para análisis global
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos grupos genéricos existen?
+- Cuales son los grupos genéricos con más productos?
 
 COLUMNAS:
 - codigo_de_grupo_generico (numeric): Código único del grupo genérico

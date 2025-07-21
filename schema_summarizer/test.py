@@ -56,6 +56,10 @@ def test_schema_summarizer():
     ]
     
     print(f"\n3. Probando {len(test_queries)} consultas específicas...\n")
+    
+    # Pausa para separar tiempo de carga del tiempo de ejecución
+    input("Presiona cualquier tecla para comenzar las consultas...")
+    
     print("RESULTADOS:")
     print("=" * 80)
     

@@ -1,5 +1,22 @@
 TABLA: productos
-DESCRIPCIÓN: Tabla principal de productos del sistema con información completa de precios, costos y características
+DESCRIPCIÓN: Tabla principal de productos del sistema con información completa de precios, costos y características. Usa esta tabla cuando quieras analizar productos, precios, costos o características de inventario.
+
+REGLAS DE NEGOCIO:
+- Solo los productos con estado 'activo' deben considerarse para ventas
+- Los productos con para_la_venta = 'S' están disponibles para la venta
+- Los productos perecederos requieren control especial de fechas de vencimiento
+- Los productos con maneja_lotes = 'S' requieren control de lotes
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuales son los productos mas caros?
+- Cuantos productos activos tenemos?
+- Cuales son los productos perecederos?
+- ¿Cuántos SKUs tenemos por canal? ¿Y cuántos en total en la compañía?
+- Facilítame el arte de X producto
+- Facilítame el código de barra de X producto
+- Facilítame el precio de X producto en la cadena tal o en el cliente tal
+- ¿Cuánto es la rentabilidad por SKU?
+- Muéstrame el inventario con sus días de determinada familia de productos
 
 COLUMNAS:
 - codigo_de_producto (nvarchar): Código único del producto

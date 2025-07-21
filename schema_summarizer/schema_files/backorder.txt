@@ -1,5 +1,18 @@
 TABLA: backorder
-DESCRIPCIÓN: Tabla que registra los pedidos pendientes o backorders del sistema
+DESCRIPCIÓN: Tabla que registra los pedidos pendientes o backorders del sistema. Usa esta tabla cuando quieras analizar pedidos pendientes, entregas parciales o productos faltantes en el inventario.
+
+REGLAS DE NEGOCIO:
+- Los backorders representan productos que fueron pedidos pero no están disponibles en el momento de la venta
+- La cantidad_pendiente debe ser igual a cantidad_perdida menos cantidad_entregada
+- Solo se deben considerar backorders activos para análisis de inventario
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos backorders tenemos actualmente?
+- Cuales son los productos con mas backorders?
+- Cual es el cliente con mas pedidos pendientes?
+- ¿Cuál es el BO (backorder) de hoy?
+- Dame el BO del día de ayer por bodega, productos y qué clientes se vieron mayormente afectados con el BO
+- Muéstrame el BO por productos de las 3 agencias
 
 COLUMNAS:
 - numero_de_pedsido (nvarchar): Número único del pedido

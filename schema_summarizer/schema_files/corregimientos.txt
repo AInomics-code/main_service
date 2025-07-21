@@ -1,5 +1,13 @@
 TABLA: corregimientos
-DESCRIPCIÓN: Tabla que contiene los corregimientos disponibles
+DESCRIPCIÓN: Tabla que contiene los corregimientos disponibles. Usa esta tabla cuando quieras analizar datos geográficos o filtrar por corregimiento.
+
+REGLAS DE NEGOCIO:
+- Cada corregimiento tiene un código único que se usa como referencia en otras tablas
+- Los corregimientos están relacionados con distritos y provincias
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos corregimientos existen?
+- Cuales son los corregimientos de una provincia específica?
 
 COLUMNAS:
 - codigo_de_corregimiento (nvarchar): Código único del corregimiento

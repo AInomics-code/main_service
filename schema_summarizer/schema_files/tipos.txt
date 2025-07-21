@@ -1,5 +1,13 @@
 TABLA: tipos
-DESCRIPCIÓN: Tabla que contiene los tipos de productos
+DESCRIPCIÓN: Tabla que contiene los tipos de productos. Usa esta tabla cuando quieras analizar productos por tipo o categorización.
+
+REGLAS DE NEGOCIO:
+- Cada tipo tiene un código único que se usa como referencia en la tabla productos
+- Los tipos ayudan a categorizar y organizar los productos
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos tipos de productos tenemos?
+- Cuales son los tipos disponibles?
 
 COLUMNAS:
 - codigo_de_tipo (nvarchar): Código único del tipo

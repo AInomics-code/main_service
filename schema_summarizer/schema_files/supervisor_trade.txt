@@ -1,5 +1,14 @@
 TABLA: supervisor_trade
-DESCRIPCIÓN: Tabla que contiene información de los supervisores trade
+DESCRIPCIÓN: Tabla que contiene información de los supervisores trade. Usa esta tabla cuando quieras analizar supervisores, asignaciones o estructura organizacional.
+
+REGLAS DE NEGOCIO:
+- Cada supervisor trade tiene un código único
+- Los supervisores trade supervisan vendedores y rutas específicas
+- La información de contacto debe estar actualizada
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos supervisores trade tenemos?
+- Cual es el supervisor con mas vendedores asignados?
 
 COLUMNAS:
 - codigo_supervisor_trade (nvarchar): Código único del supervisor trade

@@ -1,5 +1,13 @@
 TABLA: paises
-DESCRIPCIÓN: Tabla que contiene información de los países
+DESCRIPCIÓN: Tabla que contiene información de los países. Usa esta tabla cuando quieras analizar datos geográficos o filtrar por país.
+
+REGLAS DE NEGOCIO:
+- Cada país tiene un código único que se usa como referencia en otras tablas
+- Los códigos de país deben ser consistentes en todo el sistema
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- En cuantos paises operamos?
+- Cuales son los paises disponibles?
 
 COLUMNAS:
 - codigo_de_paises (nvarchar): Código único del país

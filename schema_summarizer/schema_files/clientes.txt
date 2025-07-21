@@ -1,5 +1,24 @@
 TABLA: clientes
-DESCRIPCIÓN: Tabla principal de clientes del sistema con información completa de contacto y comercial
+DESCRIPCIÓN: Tabla principal de clientes del sistema con información completa de contacto y comercial. Usa esta tabla cuando quieras analizar clientes, ventas por cliente o información de contacto.
+
+REGLAS DE NEGOCIO:
+- Solo los clientes con estado 'activo' deben considerarse para ventas
+- Los clientes con paga_impuesto = 'S' están sujetos a impuestos
+- El límite de crédito debe respetarse para nuevas ventas
+- Los clientes con compra_al_detal = 'S' pueden comprar cantidades pequeñas
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos clientes activos tenemos?
+- Cual es el cliente con mayor limite de credito?
+- Cuales son los clientes que pagan impuestos?
+- Del censo nacional de clientes de Dichter, ¿a cuántos no les vendemos? Dame la lista con geolocalización
+- ¿Qué cadena está morosa a más de 120 días?
+- ¿Cuántos clientes activos tenemos en total? ¿Y por sucursal?
+- Facilítame el número de extensión/celular/correo electrónico de X colaborador
+- Según rutero de visita por vendedor hoy, ¿qué clientes no realizaron pedido? ¿Por qué?
+- Detalle los clientes con más de 3 meses sin venta y quién es su vendedor
+- Muéstrame el fell rate del mes anterior de las 8 principales Cadenas
+- Muéstrame la cobertura general de determinado producto y muéstrame la cobertura por vendedor
 
 COLUMNAS:
 - codigo_de_cliente (nvarchar): Código único del cliente

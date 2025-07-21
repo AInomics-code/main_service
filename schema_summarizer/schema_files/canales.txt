@@ -1,5 +1,14 @@
 TABLA: canales
-DESCRIPCIÓN: Tabla que define los diferentes canales de venta
+DESCRIPCIÓN: Tabla que define los diferentes canales de venta. Usa esta tabla cuando quieras analizar ventas por canal o segmentación comercial.
+
+REGLAS DE NEGOCIO:
+- Cada canal tiene un código único
+- Los canales se usan para segmentar ventas y clientes
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuantos canales de venta existen?
+- Cuales son los canales con mas ventas?
+- ¿Cuántos SKUs tenemos por canal? ¿Y cuántos en total en la compañía?
 
 COLUMNAS:
 - codigo_de_canal (nvarchar): Código único del canal
