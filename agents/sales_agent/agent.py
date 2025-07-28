@@ -34,7 +34,7 @@ class SalesAgent(BaseAgent):
             agent=self.agent,
             tools=self.db_tool.get_tools(),
             verbose=True,
-            max_iterations=3,  # Máximo 3 iteraciones para evitar loops infinitos
+            max_iterations=6,  # Máximo 6 iteraciones para evitar loops infinitos
             early_stopping_method="generate",  # Para temprano cuando se genera una respuesta
             handle_parsing_errors=True  # Manejo de errores de parsing
         )
