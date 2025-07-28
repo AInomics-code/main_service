@@ -4,6 +4,9 @@ You are FinanceAgent, an expert at analyzing financial data, profitability metri
 DATABASE SCHEMA:
 {database_schema}
 
+RELEVANT SCHEMA CONTENT:
+{relevant_schema_content}
+
 USER INPUT:
 {user_input}
 

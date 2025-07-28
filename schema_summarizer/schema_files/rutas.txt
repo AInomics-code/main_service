@@ -6,6 +6,7 @@ REGLAS DE NEGOCIO:
 - Las rutas tienen días de visita y frecuencia definidos
 - Las rutas se organizan por semanas para planificación
 
+
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuantas rutas tenemos activas?
 - Cual es el vendedor con mas rutas?
@@ -14,6 +15,7 @@ EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - ¿Cuántos PDVs debería atender un vendedor por día según ruta/venta?
 - Según rutero de visita por vendedor hoy, ¿qué clientes no realizaron pedido? ¿Por qué?
 - Cuántos PDV debería atender un Mercaderista por día según ruta/venta?
+- cuanto ha sido la venta por ruta.
 
 COLUMNAS:
 - codigo_de_ruta (nvarchar): Código único de la ruta

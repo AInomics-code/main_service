@@ -11,20 +11,48 @@ class SchemaSummarizer:
     Carga archivos txt de una carpeta y los indexa en una base de datos vectorial para búsqueda semántica.
     """
     
+    _instance = None
+    _initialized = False
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(SchemaSummarizer, cls).__new__(cls)
+        return cls._instance
+    
     def __init__(self, schema_folder: str = "schema_files", model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         """
-        Inicializa el SchemaSummarizer.
-        
-        Args:
-            schema_folder: Carpeta que contiene los archivos txt con descripciones de tablas
-            model_name: Modelo de embeddings a usar
+        Inicializa el SchemaSummarizer (Singleton).
         """
+        if self._initialized:
+            return
+            
         self.schema_folder = schema_folder
-        self.embeddings = HuggingFaceEmbeddings(model_name=model_name)
+        self.model_name = model_name
+        self.embeddings = None
         self.vectorstore = None
         self.documents = []
         self.table_names = []
         
+        # Inicializar de forma lazy
+        self._initialize_lazy()
+        SchemaSummarizer._initialized = True
+    
+    def _initialize_lazy(self):
+        """Inicialización lazy - solo cuando se necesita"""
+        if self.vectorstore is not None:
+            return
+            
+        print("Inicializando SchemaSummarizer (primera vez)...")
+        
+        # Cargar embeddings
+        print(f"Cargando modelo de embeddings: {self.model_name}")
+        self.embeddings = HuggingFaceEmbeddings(model_name=self.model_name)
+        
+        # Construir el índice
+        print("Construyendo índice vectorial...")
+        self._build_vector_index()
+        print("SchemaSummarizer inicializado correctamente")
+    
     def load_schema_files(self) -> List[str]:
         """
         Carga todos los archivos txt de la carpeta de esquemas.
@@ -61,7 +89,7 @@ class SchemaSummarizer:
         
         return table_name, content
     
-    def build_vector_index(self):
+    def _build_vector_index(self):
         """
         Construye el índice vectorial con todos los archivos de esquema.
         """

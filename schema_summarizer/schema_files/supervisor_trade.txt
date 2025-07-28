@@ -3,12 +3,15 @@ DESCRIPCIÓN: Tabla que contiene información de los supervisores trade. Usa est
 
 REGLAS DE NEGOCIO:
 - Cada supervisor trade tiene un código único
-- Los supervisores trade supervisan vendedores y rutas específicas
+- los supervisores se relacionan con la tabla de clientes por el código supervisor trade
+- Los supervisores trade supervisan a los mercaderista asignados en los clientes en el campo MERCADERISTA
 - La información de contacto debe estar actualizada
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuantos supervisores trade tenemos?
 - Cual es el supervisor con mas vendedores asignados?
+- dame las ventas por supervisor trade
+- calcula el porcentaje de cumplimiento de ventas a la fecha, por mes, por año, cliente
 
 COLUMNAS:
 - codigo_supervisor_trade (nvarchar): Código único del supervisor trade

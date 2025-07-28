@@ -5,6 +5,7 @@ from .prompt import SUPERVISOR_PROMPT
 from config.settings import settings
 from ..registry import BaseAgent, register_agent
 from tools.sqlserver_database_tool import SQLServerDatabaseTool
+from typing import Dict, Any
 
 @register_agent("Supervisor")
 class SupervisorAgent(BaseAgent):
@@ -38,19 +39,23 @@ class SupervisorAgent(BaseAgent):
             verbose=True
         )
     
-    def run(self, user_input: str) -> str:
+    def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:
         """Método estándar que implementa la interfaz BaseAgent"""
         try:
+            # Usar schema externo si se proporciona, sino usar el interno
+            schema_to_use = database_schema if database_schema else self.database_schema
+            
             # Use our custom agent with the database schema
             response = self.agent_executor.invoke({
                 "user_input": user_input,
-                "database_schema": str(self.database_schema)
+                "database_schema": str(schema_to_use),
+                "relevant_schema_content": relevant_schema_content or "No relevant schema content provided"
             })
             return response.get("output", "No se pudo obtener respuesta de la base de datos.")
         except Exception as e:
             return f"Error al procesar la consulta: {str(e)}"
     
-    def combine_results(self, user_input: str, pipeline_plan: str, detected_language: str, agent_results: str) -> str:
+    def combine_results(self, user_input: str, pipeline_plan: str, detected_language: str, agent_results: str, relevant_schema_content: str = None) -> str:
         """Método específico para combinar resultados"""
         try:
             response = self.agent_executor.invoke({
@@ -58,7 +63,8 @@ class SupervisorAgent(BaseAgent):
                 "database_schema": str(self.database_schema),
                 "pipeline_plan": pipeline_plan,
                 "detected_language": detected_language,
-                "agent_results": agent_results
+                "agent_results": agent_results,
+                "relevant_schema_content": relevant_schema_content or "No relevant schema content provided"
             })
             return response.get("output", "No se pudieron combinar los resultados.")
         except Exception as e:

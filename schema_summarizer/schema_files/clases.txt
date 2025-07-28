@@ -5,15 +5,19 @@ REGLAS DE NEGOCIO:
 - Cada clase tiene un código único
 - Las clases están asociadas a tipos y categorías
 - Ayuda a segmentar productos para reportes
+- Agrupan las ventas por clases para determinar cual tiene mas ganancia
+- no todos los productos tienen meses de vencimiento.
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuantas clases de productos existen?
 - Cuales son las clases con mas productos?
 - Dame la venta x Clases e indícame cuáles vienen decreciendo (periodo determinado)
 - Dame la venta por clases-cadenas (periodo determinado)
+- Dame la clase que mas se mueve por tipo de cliente, por provincia, distrito, corregimiento, por vendedor, etc.
 
 COLUMNAS:
 - codigo_de_clase (nvarchar): Código único de la clase
 - nombre_de_clase (nvarchar): Nombre de la clase
 - codigo_de_tipo (nvarchar): Código del tipo asociado
 - codigo_de_categoria (nvarchar): Código de la categoría a la que pertenece
+- meses_de_vencimiento (int): indica la cantidad de meses de vencimiento que puede tener un producto. 

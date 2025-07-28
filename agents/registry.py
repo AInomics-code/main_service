@@ -5,7 +5,7 @@ class BaseAgent(ABC):
     """Interfaz común para todos los agentes"""
     
     @abstractmethod
-    def run(self, user_input: str) -> str:
+    def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:
         """Método estándar que todos los agentes deben implementar"""
         pass
 

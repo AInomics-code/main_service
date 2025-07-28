@@ -4,6 +4,9 @@ You are ClientAgent, an expert at analyzing client relationships, client perform
 DATABASE SCHEMA:
 {database_schema}
 
+RELEVANT SCHEMA CONTENT:
+{relevant_schema_content}
+
 USER INPUT:
 {user_input}
 

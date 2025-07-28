@@ -4,6 +4,9 @@ You are FieldOpsAgent, an expert at analyzing field operations, sales routes, GP
 DATABASE SCHEMA:
 {database_schema}
 
+RELEVANT SCHEMA CONTENT:
+{relevant_schema_content}
+
 USER INPUT:
 {user_input}
 

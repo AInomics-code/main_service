@@ -8,6 +8,10 @@ REGLAS DE NEGOCIO:
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuantos tipos de productos tenemos?
 - Cuales son los tipos disponibles?
+- dame las ventas por tipo de producto
+- cuales son los motivos de devolución con mas frecuencia ?
+- que tipo de productos tiene mas movimiento por provincia
+- que tipo de productos se vende mas por provincia, cliente, vendedor.
 
 COLUMNAS:
 - codigo_de_tipo (nvarchar): Código único del tipo

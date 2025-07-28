@@ -4,8 +4,11 @@ DESCRIPCIÓN: Tabla que registra las transacciones de inventario. Usa esta tabla
 REGLAS DE NEGOCIO:
 - Las transacciones de inventario afectan la existencia en productos_por_deposito
 - Los productos con maneja_lotes requieren número de lote
-- Las fechas de vencimiento son obligatorias para productos perecederos
+- Las fechas de vencimiento son obligatorias para productos que manejan lotes
 - Los ajustes de inventario físico deben ser justificados
+- en la tabla existen transacciones de COMPRA, TRANSFERENCIA DE INVENTARIO, AJUSTE DE INVENTARIO Y DEVOLUCION DE COMPRA
+- las transacciones se hacen por producto, deposito.
+- el costo guardado en cada línea corresponde al costo del producto en el momento en que se realizó la transacció
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuales fueron los movimientos de inventario del ultimo mes?

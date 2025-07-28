@@ -4,11 +4,18 @@ DESCRIPCIÓN: Tabla que define los diferentes canales de venta. Usa esta tabla c
 REGLAS DE NEGOCIO:
 - Cada canal tiene un código único
 - Los canales se usan para segmentar ventas y clientes
+- Para buscar el canal al que pertenece el cliente se busca el código de tipo de negocio en la tabla tipo de negocio y luego se busca el código de canal en la tabla de canales.
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuantos canales de venta existen?
 - Cuales son los canales con mas ventas?
 - ¿Cuántos SKUs tenemos por canal? ¿Y cuántos en total en la compañía?
+- cuanto es el total de ventas por canal
+- cuanto es el total de ventas por vendedor dentro del canal
+- se ha alcanzado la meta de ventas al día de hoy con respecto al proyectadado de ventas?
+- que vendedor dentro del proyectado de ventas ha alcanzado el máximo de cumplimiento?
+- cual es el vendedor Top
+- que canal es el TOP
 
 COLUMNAS:
 - codigo_de_canal (nvarchar): Código único del canal

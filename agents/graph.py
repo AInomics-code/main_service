@@ -18,11 +18,20 @@ class DynamicAgentGraph:
         self.language_detector = LanguageDetectorAgent()
         self.supervisor = SupervisorAgent()
         
+        # Cargar schema una sola vez para toda la sesión
+        from tools.sqlserver_database_tool import SQLServerDatabaseTool
+        temp_db_tool = SQLServerDatabaseTool()
+        self.shared_schema = temp_db_tool.get_cached_schema_json()
+        
         # Cargar todos los agentes automáticamente
-        # Importar el módulo agents para que se registren todos los agentes
         import agents
         
         self.graph = self._build_graph()
+    
+    def _get_schema_summarizer(self):
+        """Obtiene la instancia Singleton del SchemaSummarizer"""
+        from schema_summarizer.schema_summarizer import SchemaSummarizer
+        return SchemaSummarizer()  # El Singleton se encarga de reutilizar la instancia
     
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(AgentState)
@@ -70,11 +79,36 @@ class DynamicAgentGraph:
         except Exception as e:
             return {"detected_language": f"Error: {str(e)}"}
     
+    def _get_relevant_schema_content(self, user_input: str, top_k: int = 5) -> str:
+        """Obtiene el contenido completo de las tablas relevantes"""
+        try:
+            # Usar el Singleton del SchemaSummarizer
+            schema_summarizer = self._get_schema_summarizer()
+            relevant_tables = schema_summarizer.search_relevant_tables(user_input, top_k)
+            
+            # Construir contenido completo de las tablas relevantes
+            schema_content = "SCHEMA RELEVANTE PARA LA CONSULTA:\n\n"
+            
+            for table in relevant_tables:
+                schema_content += f"=== TABLA: {table['table_name'].upper()} ===\n"
+                schema_content += f"Relevancia: {table['relevance_score']:.4f}\n"
+                schema_content += f"Contenido:\n{table['content']}\n\n"
+                schema_content += "=" * 50 + "\n\n"
+            
+            return schema_content
+            
+        except Exception as e:
+            print(f"Error obteniendo contenido de schema relevante: {e}")
+            return "Schema relevante no disponible"
+    
     def _execute_agents_node(self, state: AgentState) -> AgentState:
         """Nodo que ejecuta dinámicamente los agentes según el plan"""
         try:
             pipeline_plan = state["pipeline_plan"]
             user_input = state["user_input"]
+            
+            # Obtener contenido completo de las tablas relevantes
+            relevant_schema_content = self._get_relevant_schema_content(user_input)
             
             if not pipeline_plan or "error" in pipeline_plan:
                 return {
@@ -97,11 +131,11 @@ class DynamicAgentGraph:
                         if agent_exists(agent_name):
                             agent = get_agent(agent_name)
                             
-                            # Para el StrategyAgent, pasamos los resultados anteriores
+                            # Pasar el schema compartido y el contenido relevante
                             if agent_name == "StrategyAgent":
-                                result = agent.synthesize_results(user_input, str(results))
+                                result = agent.synthesize_results(user_input, str(results), self.shared_schema, relevant_schema_content)
                             else:
-                                result = agent.run(user_input)
+                                result = agent.run(user_input, self.shared_schema, relevant_schema_content)
                             
                             step_results.append({
                                 "agent": agent_name,
@@ -144,6 +178,9 @@ class DynamicAgentGraph:
             detected_language = state["detected_language"]
             agent_results = state["agent_results"]
             
+            # Obtener contenido completo de las tablas relevantes para el supervisor
+            relevant_schema_content = self._get_relevant_schema_content(user_input)
+            
             # Crear un resumen para el supervisor
             summary = {
                 "user_input": user_input,
@@ -152,12 +189,13 @@ class DynamicAgentGraph:
                 "detected_language": detected_language
             }
             
-            # El supervisor ahora maneja el idioma detectado
+            # El supervisor ahora maneja el idioma detectado y contenido relevante
             final_response = self.supervisor.combine_results(
                 user_input,
                 str(pipeline_plan),
                 detected_language or "Unknown",
-                str(agent_results)
+                str(agent_results),
+                relevant_schema_content
             )
             
             return {"final_response": final_response}

@@ -4,6 +4,9 @@ You are InventoryAgent, an expert at analyzing inventory levels, stock availabil
 DATABASE SCHEMA:
 {database_schema}
 
+RELEVANT SCHEMA CONTENT:
+{relevant_schema_content}
+
 USER INPUT:
 {user_input}
 

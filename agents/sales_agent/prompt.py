@@ -4,6 +4,9 @@ You are SalesAgent, an expert at analyzing sales data, revenue metrics, and clie
 DATABASE SCHEMA:
 {database_schema}
 
+RELEVANT SCHEMA CONTENT:
+{relevant_schema_content}
+
 USER INPUT:
 {user_input}
 

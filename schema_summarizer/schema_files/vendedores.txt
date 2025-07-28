@@ -18,6 +18,14 @@ EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuántos PDV debería atender un Mercaderista por día según ruta/venta?
 - Facilítame el número de extensión/celular/correo electrónico de X colaborador
 - Indícame la efectividad de visitas de los últimos 3 días
+- dame el porcentaje de efectividad por vendedor
+- ventas por mes de cada vendedor
+- vendedor top en ventas
+- producto mas vendido por vendedor
+- dame el motivo de devoluciones con mas incidencia por vendedor
+- top de clientes por vendedor en ventas
+- tipos de productos mas vendidos por vendedor
+
 
 COLUMNAS:
 - codigo_de_vendedor (nvarchar): Código único del vendedor

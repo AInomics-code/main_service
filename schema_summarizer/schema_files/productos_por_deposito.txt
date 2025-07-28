@@ -6,6 +6,7 @@ REGLAS DE NEGOCIO:
 - La cantidad_separada no puede ser mayor que la existencia
 - El inventario_madre representa el stock disponible para venta
 - Solo productos con existencia > 0 están disponibles para venta
+- la combinación de código de producto y código de depósito es única, no puede haber repetidos.
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cual es el inventario total por deposito?
@@ -17,6 +18,8 @@ EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Muéstrame el inventario con sus días de determinada familia de productos
 - Que productos no tenemos inventario en las sucursales
 - Según la madre que productos están por debajo esta semana en las sucursales
+- cual es el movimiento de inventario en determinada bodega / producto
+- de que bodega se ha facturado
 
 COLUMNAS:
 - codigo_de_producto (nvarchar): Código del producto

@@ -4,6 +4,7 @@ DESCRIPCIÓN: Tabla principal de ventas. Usa esta tabla cuando quieras analizar 
 REGLAS DE NEGOCIO:
 - Si el usuario te pide totalizar las ventas no debes tener en cuenta los datos donde tipo_de_transaccion sea igual a devolucion
 - El usuario puede llamar a los deposito como cadenas. Si te piden totalizar por cadena se refiere a totalizar por codigo_de_deposito
+- En la tabla solo hay dos tipos de transacciones, FACTURA Y NOTA DE CREDITO
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - De cuanto fueron las ventas del ultimo mes?
