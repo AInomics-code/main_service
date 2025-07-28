@@ -29,11 +29,14 @@ class StrategyAgent(BaseAgent):
             prompt=self.prompt
         )
         
-        # Create agent executor
+        # Create agent executor with limits to prevent infinite loops
         self.agent_executor = AgentExecutor(
             agent=self.agent,
             tools=self.db_tool.get_tools(),
-            verbose=True
+            verbose=True,
+            max_iterations=3,  # Máximo 3 iteraciones para evitar loops infinitos
+            early_stopping_method="generate",  # Para temprano cuando se genera una respuesta
+            handle_parsing_errors=True  # Manejo de errores de parsing
         )
     
     def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:
