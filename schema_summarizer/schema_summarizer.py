@@ -19,12 +19,18 @@ class SchemaSummarizer:
             cls._instance = super(SchemaSummarizer, cls).__new__(cls)
         return cls._instance
     
-    def __init__(self, schema_folder: str = "schema_files", model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, schema_folder: str = None, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         """
         Inicializa el SchemaSummarizer (Singleton).
         """
         if self._initialized:
             return
+        
+        # Si no se especifica schema_folder, usar la ruta relativa al módulo
+        if schema_folder is None:
+            # Obtener la ruta del directorio donde está este archivo
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            schema_folder = os.path.join(current_dir, "schema_files")
             
         self.schema_folder = schema_folder
         self.model_name = model_name

@@ -19,10 +19,7 @@ class SupervisorAgent(BaseAgent):
         # Initialize SQL Server database tool
         self.db_tool = SQLServerDatabaseTool(llm=self.llm)
         
-        # Get database schema from cache
-        self.database_schema = self.db_tool.get_cached_schema_json()
-        
-        # Create prompt template with database schema
+        # Create prompt template
         self.prompt = ChatPromptTemplate.from_template(SUPERVISOR_PROMPT)
         
         # Create custom agent with database tools and our prompt
@@ -42,13 +39,16 @@ class SupervisorAgent(BaseAgent):
     def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:
         """Método estándar que implementa la interfaz BaseAgent"""
         try:
-            # Usar schema externo si se proporciona, sino usar el interno
-            schema_to_use = database_schema if database_schema else self.database_schema
+            # Usar SOLO el contenido relevante del schema
+            if relevant_schema_content and relevant_schema_content != "No relevant schema content provided":
+                schema_context = relevant_schema_content
+            else:
+                schema_context = "No relevant schema content available"
             
-            # Use our custom agent with the database schema
+            # Use our custom agent with the relevant schema content only
             response = self.agent_executor.invoke({
                 "user_input": user_input,
-                "database_schema": str(schema_to_use),
+                "database_schema": schema_context,
                 "relevant_schema_content": relevant_schema_content or "No relevant schema content provided"
             })
             return response.get("output", "No se pudo obtener respuesta de la base de datos.")
@@ -58,9 +58,15 @@ class SupervisorAgent(BaseAgent):
     def combine_results(self, user_input: str, pipeline_plan: str, detected_language: str, agent_results: str, relevant_schema_content: str = None) -> str:
         """Método específico para combinar resultados"""
         try:
+            # Usar SOLO el contenido relevante del schema
+            if relevant_schema_content and relevant_schema_content != "No relevant schema content provided":
+                schema_context = relevant_schema_content
+            else:
+                schema_context = "No relevant schema content available"
+            
             response = self.agent_executor.invoke({
                 "user_input": user_input,
-                "database_schema": str(self.database_schema),
+                "database_schema": schema_context,
                 "pipeline_plan": pipeline_plan,
                 "detected_language": detected_language,
                 "agent_results": agent_results,

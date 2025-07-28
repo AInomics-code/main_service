@@ -7,7 +7,6 @@ from langchain.base_language import BaseLanguageModel
 from sqlalchemy import text
 
 from config.settings import settings
-from config.redis_config import get_redis_client
 
 class SQLServerDatabaseTool:
     def __init__(self, db_url: Optional[str] = None, llm: Optional[BaseLanguageModel] = None):
@@ -123,40 +122,4 @@ class SQLServerDatabaseTool:
             return database_schema
             
         except Exception as e:
-            raise Exception(f"Error extracting SQL Server database schema: {str(e)}")
-    
-    def get_cached_schema_json(self) -> Dict[str, Any]:
-        """
-        Get the SQL Server database schema from Redis cache or generate and cache it
-        
-        Returns:
-            Dict[str, Any]: Dictionary containing all tables and their attributes
-        """
-        redis_client = get_redis_client()
-        cache_key = f"sqlserver_schema:{self.db_url.split('/')[-1] if '/' in self.db_url else 'default'}"
-        
-        try:
-            # Try to get from cache first
-            cached_schema = redis_client.get(cache_key)
-            
-            if cached_schema:
-                print(f"Using cached SQL Server schema from Redis")
-                return json.loads(cached_schema)
-            
-            # If not in cache, generate the schema
-            print(f"No cached SQL Server schema found in Redis. Generating new schema.")
-            schema = self.get_schema_json()
-            
-            # Cache the result with 24 hours TTL (86400 seconds)
-            redis_client.setex(
-                cache_key, 
-                86400,  # 24 hours in seconds
-                json.dumps(schema, default=str)
-            )
-            
-            return schema
-            
-        except Exception as e:
-            # If Redis fails, fallback to direct schema generation
-            print(f"Redis cache error: {str(e)}. Falling back to direct SQL Server schema generation.")
-            return self.get_schema_json() 
+            raise Exception(f"Error extracting SQL Server database schema: {str(e)}") 
