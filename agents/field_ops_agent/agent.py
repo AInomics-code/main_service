@@ -27,9 +27,13 @@ class FieldOpsAgent(BaseAgent):
             agent=self.agent,
             tools=self.db_tool.get_tools(),
             verbose=True,
-            max_iterations=6,  # Máximo 6 iteraciones para evitar loops infinitos
-            early_stopping_method="generate",  # Para temprano cuando se genera una respuesta
-            handle_parsing_errors=True  # Manejo de errores de parsing
+            max_iterations=3,  # Reduce a 3 iteraciones máximo
+            max_execution_time=30,  # Tiempo máximo de 30 segundos
+            early_stopping_method="force",  # Cambia a "force" en lugar de "generate"
+            handle_parsing_errors=True,
+            return_intermediate_steps=True,  # Para debug
+            # Configuración adicional para prevenir loops
+            trim_intermediate_steps=-1  # Mantiene solo el último paso
         )
     
     def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:

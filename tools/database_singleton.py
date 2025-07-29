@@ -32,9 +32,12 @@ class DatabaseToolSingleton:
         """Obtiene o crea la instancia del LLM (Singleton)"""
         if self._llm is None:
             self._llm = ChatOpenAI(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",  # Cambia a GPT-4o-mini (mejor seguimiento de instrucciones)
                 temperature=0,
-                openai_api_key=settings.OPENAI_KEY
+                openai_api_key=settings.OPENAI_KEY,
+                model_kwargs={
+                    "stop": ["Observation:"],  # Para ayudar a parar después de obtener resultados
+                }
             )
         return self._llm
     
