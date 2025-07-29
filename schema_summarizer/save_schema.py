@@ -87,6 +87,53 @@ class VectorDBUpdater:
             logger.error(f"Error verificando índice: {e}")
             return False
 
+    def create_index_if_not_exists(self):
+        """Crear el índice si no existe con configuración optimizada"""
+        try:
+            if not self.opensearch_client.indices.exists(index=self.index_name):
+                index_mapping = {
+                    "mappings": {
+                        "properties": {
+                            "embedding": {
+                                "type": "knn_vector",
+                                "dimension": 1536,
+                                "method": {
+                                    "engine": "faiss",
+                                    "space_type": "innerproduct",
+                                    "name": "hnsw",
+                                    "parameters": {
+                                        "ef_search": 20,
+                                        "ef_construction": 32,
+                                        "m": 8
+                                    }
+                                }
+                            },
+                            "content": {
+                                "type": "text"
+                            },
+                            "table_name": {
+                                "type": "text"
+                            }
+                        }
+                    },
+                    "settings": {
+                        "index": {
+                            "knn": True,
+                            "knn.algo_param.ef_search": 20,
+                            "number_of_replicas": 0,
+                            "number_of_shards": 1,
+                            "refresh_interval": "30s"
+                        }
+                    }
+                }
+                self.opensearch_client.indices.create(index=self.index_name, body=index_mapping)
+                logger.info(f"Índice {self.index_name} creado exitosamente con configuración optimizada")
+            else:
+                logger.info(f"Índice {self.index_name} ya existe")
+        except Exception as e:
+            logger.error(f"Error creando índice: {e}")
+            raise
+
     def update_vector_db(self, schema_files_dir):
         """Actualizar la vector database con los archivos de schema"""
         try:
@@ -169,6 +216,7 @@ class VectorDBUpdater:
 
 if __name__ == "__main__":
     updater = VectorDBUpdater()
-    # Solo actualizar la vector database con los archivos de schema_files
-    # NO crear ni modificar el índice
+    # Crear el índice si no existe con configuración optimizada
+    updater.create_index_if_not_exists()
+    # Actualizar la vector database con los archivos de schema_files
     updater.update_vector_db(os.path.join(os.path.dirname(__file__), "schema_files"))
