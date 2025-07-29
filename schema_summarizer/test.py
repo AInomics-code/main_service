@@ -18,9 +18,7 @@ def test_schema_summarizer():
     print("1. Inicializando SchemaSummarizer...")
     summarizer = SchemaSummarizer()
     
-    # Construir el índice vectorial (setup - no se mide)
-    print("2. Construyendo índice vectorial...")
-    summarizer.build_vector_index()
+    print("2. SchemaSummarizer inicializado con OpenSearch")
     
     # Array de preguntas de prueba
     test_queries = [

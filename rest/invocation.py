@@ -1,21 +1,15 @@
 from fastapi import Request
 from pydantic import BaseModel
 from agents.graph import DynamicAgentGraph
-from schema_summarizer.schema_summarizer import SchemaSummarizer
 
 # Variables globales para instancias pre-inicializadas
-_schema_summarizer = None
 _graph = None
 
 def initialize_services():
     """Inicializa servicios costosos al startup"""
-    global _schema_summarizer, _graph
+    global _graph
     
     print("🚀 Inicializando servicios de IA...")
-    
-    # Pre-inicializar SchemaSummarizer (carga modelo y embeddings)
-    print("📚 Inicializando SchemaSummarizer...")
-    _schema_summarizer = SchemaSummarizer()
     
     # Pre-inicializar DynamicAgentGraph
     print("🔄 Inicializando DynamicAgentGraph...")

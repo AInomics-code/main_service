@@ -18,18 +18,15 @@ class DynamicAgentGraph:
         self.language_detector = LanguageDetectorAgent()
         self.supervisor = SupervisorAgent()
         
-        # Pre-inicializar SchemaSummarizer para evitar latencia
-        from schema_summarizer.schema_summarizer import SchemaSummarizer
-        self.schema_summarizer = SchemaSummarizer()
-        
         # Cargar todos los agentes automáticamente
         import agents
         
         self.graph = self._build_graph()
     
     def _get_schema_summarizer(self):
-        """Retorna la instancia ya inicializada del SchemaSummarizer"""
-        return self.schema_summarizer
+        """Retorna una instancia del SchemaSummarizer (Singleton)"""
+        from schema_summarizer.schema_summarizer import SchemaSummarizer
+        return SchemaSummarizer()
     
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(AgentState)

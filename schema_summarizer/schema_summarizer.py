@@ -1,14 +1,20 @@
 import os
+import sys
 import json
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
+import boto3
+import time
+from opensearchpy import OpenSearch, RequestsHttpConnection
+from requests_aws4auth import AWS4Auth
 from typing import List, Dict, Any, Tuple
-import glob
+
+# Agregar el directorio padre al path para importar config
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.settings import settings
 
 class SchemaSummarizer:
     """
     Herramienta para optimizar el envío de esquemas de base de datos a los agentes.
-    Carga archivos txt de una carpeta y los indexa en una base de datos vectorial para búsqueda semántica.
+    Usa OpenSearch y Bedrock para búsqueda semántica rápida en la nube.
     """
     
     _instance = None
@@ -19,7 +25,7 @@ class SchemaSummarizer:
             cls._instance = super(SchemaSummarizer, cls).__new__(cls)
         return cls._instance
     
-    def __init__(self, schema_folder: str = None, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, schema_folder: str = None):
         """
         Inicializa el SchemaSummarizer (Singleton).
         """
@@ -33,97 +39,72 @@ class SchemaSummarizer:
             schema_folder = os.path.join(current_dir, "schema_files")
             
         self.schema_folder = schema_folder
-        self.model_name = model_name
-        self.embeddings = None
-        self.vectorstore = None
-        self.documents = []
-        self.table_names = []
+        self.opensearch_endpoint = settings.OPENSEARCH_ENDPOINT
+        self.index_name = "tables"
         
-        # Inicializar de forma lazy
-        self._initialize_lazy()
+        # Configurar autenticación AWS
+        self.aws_credentials = boto3.Session(
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name='us-east-1'
+        )
+        
+        # Configurar cliente OpenSearch con timeouts optimizados
+        self.opensearch_client = OpenSearch(
+            hosts=[{'host': self.opensearch_endpoint.replace('https://', ''), 'port': 443}],
+            http_auth=AWS4Auth(
+                self.aws_credentials.get_credentials().access_key,
+                self.aws_credentials.get_credentials().secret_key,
+                'us-east-1',
+                'aoss',
+                session_token=self.aws_credentials.get_credentials().token
+            ),
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection,
+            timeout=5,  # Timeout más agresivo
+            max_retries=1,  # Menos reintentos
+            retry_on_timeout=False
+        )
+        
+        # Configurar cliente Bedrock para Titan
+        self.bedrock_client = boto3.client(
+            'bedrock-runtime',
+            region_name='us-east-1',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            config=boto3.session.Config(
+                connect_timeout=3,
+                read_timeout=5
+            )
+        )
+        
         SchemaSummarizer._initialized = True
+        print("SchemaSummarizer inicializado correctamente con OpenSearch")
     
-    def _initialize_lazy(self):
-        """Inicialización lazy - solo cuando se necesita"""
-        if self.vectorstore is not None:
-            return
+    def get_embeddings(self, text):
+        """Obtener embeddings usando Titan v1 - optimizado para velocidad"""
+        try:
+            request_body = {
+                "inputText": text
+            }
             
-        print("Inicializando SchemaSummarizer (primera vez)...")
-        
-        # Cargar embeddings
-        print(f"Cargando modelo de embeddings: {self.model_name}")
-        self.embeddings = HuggingFaceEmbeddings(model_name=self.model_name)
-        
-        # Construir el índice
-        print("Construyendo índice vectorial...")
-        self._build_vector_index()
-        print("SchemaSummarizer inicializado correctamente")
-    
-    def load_schema_files(self) -> List[str]:
-        """
-        Carga todos los archivos txt de la carpeta de esquemas.
-        
-        Returns:
-            Lista de rutas de archivos cargados
-        """
-        if not os.path.exists(self.schema_folder):
-            raise FileNotFoundError(f"La carpeta {self.schema_folder} no existe")
-        
-        # Buscar todos los archivos txt en la carpeta
-        txt_files = glob.glob(os.path.join(self.schema_folder, "*.txt"))
-        
-        if not txt_files:
-            raise FileNotFoundError(f"No se encontraron archivos .txt en {self.schema_folder}")
-        
-        print(f"Encontrados {len(txt_files)} archivos de esquema")
-        return txt_files
-    
-    def read_schema_file(self, file_path: str) -> Tuple[str, str]:
-        """
-        Lee un archivo de esquema y extrae el nombre de la tabla y su contenido.
-        
-        Args:
-            file_path: Ruta al archivo txt
+            response = self.bedrock_client.invoke_model(
+                modelId='amazon.titan-embed-text-v1',
+                body=json.dumps(request_body).encode('utf-8'),
+                contentType='application/json'
+            )
             
-        Returns:
-            Tupla con (nombre_tabla, contenido)
-        """
-        table_name = os.path.basename(file_path).replace('.txt', '')
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read().strip()
-        
-        return table_name, content
-    
-    def _build_vector_index(self):
-        """
-        Construye el índice vectorial con todos los archivos de esquema.
-        """
-        txt_files = self.load_schema_files()
-        
-        documents = []
-        table_names = []
-        
-        for file_path in txt_files:
-            table_name, content = self.read_schema_file(file_path)
-            documents.append(content)
-            table_names.append(table_name)
-        
-        if not documents:
-            raise ValueError("No se pudieron cargar documentos de esquema")
-        
-        # Crear vectorstore con FAISS
-        print("Generando embeddings y creando índice vectorial...")
-        self.vectorstore = FAISS.from_texts(documents, self.embeddings)
-        
-        self.documents = documents
-        self.table_names = table_names
-        
-        print(f"Índice vectorial construido con {len(documents)} tablas")
+            response_body = response['body'].read()
+            result = json.loads(response_body)
+            return result['embedding']
+        except Exception as e:
+            print(f"Error obteniendo embeddings: {e}")
+            raise
     
     def search_relevant_tables(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """
-        Busca las tablas más relevantes para una consulta dada.
+        Busca las tablas más relevantes para una consulta dada usando OpenSearch.
         
         Args:
             query: Consulta del usuario
@@ -132,32 +113,52 @@ class SchemaSummarizer:
         Returns:
             Lista de diccionarios con información de las tablas más relevantes
         """
-        if self.vectorstore is None:
-            raise ValueError("El índice vectorial no ha sido construido. Ejecuta build_vector_index() primero.")
-        
-        # Buscar en el vectorstore
-        docs_and_scores = self.vectorstore.similarity_search_with_score(query, k=top_k)
-        
-        results = []
-        for i, (doc, score) in enumerate(docs_and_scores):
-            # Encontrar el índice del documento en la lista original
-            try:
-                idx = self.documents.index(doc.page_content)
-                table_name = self.table_names[idx]
-            except ValueError:
-                # Si no se encuentra, usar un índice por defecto
-                idx = i
-                table_name = f"table_{i}"
+        try:
+            # Obtener embeddings de la pregunta del usuario
+            query_embedding = self.get_embeddings(query)
             
-            results.append({
-                'rank': i + 1,
-                'table_name': table_name,
-                'content': doc.page_content,
-                'relevance_score': float(score),
-                'file_path': os.path.join(self.schema_folder, f"{table_name}.txt")
-            })
-        
-        return results
+            # Query de búsqueda vectorial optimizada
+            query_body = {
+                "query": {
+                    "knn": {
+                        "embedding": {
+                            "vector": query_embedding,
+                            "k": top_k
+                        }
+                    }
+                },
+                "_source": ["table_name", "content"],
+                "size": top_k
+            }
+            
+            # Realizar búsqueda con timeout muy corto
+            response = self.opensearch_client.search(
+                index=self.index_name,
+                body=query_body,
+                request_timeout=3  # Timeout muy corto
+            )
+            
+            hits = response['hits']['hits']
+            results = []
+            
+            for i, hit in enumerate(hits):
+                score = hit['_score']
+                table_name = hit['_source']['table_name']
+                content = hit['_source']['content']
+                
+                results.append({
+                    'rank': i + 1,
+                    'table_name': table_name,
+                    'content': content,
+                    'relevance_score': float(score),
+                    'file_path': os.path.join(self.schema_folder, f"{table_name}.txt")
+                })
+            
+            return results
+                
+        except Exception as e:
+            print(f"Error en búsqueda de tablas relevantes: {e}")
+            return []
     
     def get_schema_summary(self, query: str, top_k: int = 5) -> Dict[str, Any]:
         """
@@ -177,54 +178,45 @@ class SchemaSummarizer:
             'query': query,
             'relevant_tables': relevant_tables,
             'total_tables_found': len(relevant_tables),
-            'schema_folder': self.schema_folder,
-            'total_tables_in_index': len(self.table_names)
+            'schema_folder': self.schema_folder
         }
         
         return summary
     
-    def save_index(self, file_path: str):
-        """
-        Guarda el índice vectorial en disco.
-        
-        Args:
-            file_path: Ruta donde guardar el índice
-        """
-        if self.vectorstore is None:
-            raise ValueError("No hay índice para guardar")
-        
-        self.vectorstore.save_local(file_path)
-        print(f"Índice guardado en {file_path}")
-    
-    def load_index(self, file_path: str, documents: List[str], table_names: List[str]):
-        """
-        Carga un índice vectorial desde disco.
-        
-        Args:
-            file_path: Ruta del índice a cargar
-            documents: Lista de documentos originales
-            table_names: Lista de nombres de tablas
-        """
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"El archivo de índice {file_path} no existe")
-        
-        self.vectorstore = FAISS.load_local(file_path, self.embeddings)
-        self.documents = documents
-        self.table_names = table_names
-        print(f"Índice cargado desde {file_path}")
-    
     def list_all_tables(self) -> List[str]:
         """
-        Lista todas las tablas en el índice.
+        Lista todas las tablas en el índice de OpenSearch.
         
         Returns:
             Lista de nombres de tablas
         """
-        return self.table_names.copy()
+        try:
+            query_body = {
+                "query": {
+                    "match_all": {}
+                },
+                "_source": ["table_name"],
+                "size": 1000
+            }
+            
+            response = self.opensearch_client.search(
+                index=self.index_name,
+                body=query_body,
+                request_timeout=5
+            )
+            
+            hits = response['hits']['hits']
+            table_names = [hit['_source']['table_name'] for hit in hits]
+            
+            return table_names
+            
+        except Exception as e:
+            print(f"Error listando tablas: {e}")
+            return []
     
     def get_table_content(self, table_name: str) -> str:
         """
-        Obtiene el contenido de una tabla específica.
+        Obtiene el contenido de una tabla específica desde OpenSearch.
         
         Args:
             table_name: Nombre de la tabla
@@ -232,8 +224,29 @@ class SchemaSummarizer:
         Returns:
             Contenido de la tabla
         """
-        if table_name not in self.table_names:
-            raise ValueError(f"Tabla '{table_name}' no encontrada en el índice")
-        
-        idx = self.table_names.index(table_name)
-        return self.documents[idx] 
+        try:
+            query_body = {
+                "query": {
+                    "term": {
+                        "table_name": table_name
+                    }
+                },
+                "_source": ["content"],
+                "size": 1
+            }
+            
+            response = self.opensearch_client.search(
+                index=self.index_name,
+                body=query_body,
+                request_timeout=3
+            )
+            
+            hits = response['hits']['hits']
+            if hits:
+                return hits[0]['_source']['content']
+            else:
+                raise ValueError(f"Tabla '{table_name}' no encontrada en el índice")
+                
+        except Exception as e:
+            print(f"Error obteniendo contenido de tabla {table_name}: {e}")
+            raise 
