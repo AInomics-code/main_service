@@ -6,6 +6,7 @@ REGLAS DE NEGOCIO:
 - Los productos con para_la_venta = 'S' están disponibles para la venta
 - Los productos perecederos requieren control especial de fechas de vencimiento
 - Los productos con maneja_lotes = 'S' requieren control de lotes
+- Cuando se necesite saber el codigo de un producto se debe hacer una busqueda fuzzy o por proximidad por el nombre_de_producto y escoger el registro que mas simulitud tenga. Por ejemplo si el usuario busca "sobre de mayonesa" entonces debe buscar resultados como "SOBRE MAYONESA 350G" y continuar sus busquedas por el codigo_de_producto del producto encontrado.
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuales son los productos mas caros?
