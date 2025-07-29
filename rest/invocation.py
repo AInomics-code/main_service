@@ -11,9 +11,14 @@ def initialize_services():
     
     print("🚀 Inicializando servicios de IA...")
     
-    # Pre-inicializar DynamicAgentGraph
+    # Pre-inicializar solo el grafo (los agentes se cargarán lazy)
     print("🔄 Inicializando DynamicAgentGraph...")
     _graph = DynamicAgentGraph()
+    
+    # Pre-cargar solo el agente más común (StrategyAgent)
+    print("🔄 Pre-cargando agente crítico (StrategyAgent)...")
+    from agents.registry import preload_agent
+    preload_agent("StrategyAgent")
     
     print("✅ Servicios inicializados correctamente")
 

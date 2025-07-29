@@ -1,23 +1,16 @@
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from .prompt import FINANCE_AGENT_PROMPT
-from config.settings import settings
 from ..registry import BaseAgent, register_agent
-from tools.sqlserver_database_tool import SQLServerDatabaseTool
+from tools.database_singleton import database_singleton
 from typing import Dict, Any
 
 @register_agent("FinanceAgent")
 class FinanceAgent(BaseAgent):
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model="gpt-3.5-turbo",
-            temperature=0,
-            openai_api_key=settings.OPENAI_KEY
-        )
-        
-        # Initialize SQL Server database tool
-        self.db_tool = SQLServerDatabaseTool(llm=self.llm)
+        # Usar singleton para LLM y herramientas de base de datos
+        self.llm = database_singleton.get_llm()
+        self.db_tool = database_singleton.get_database_tool()
         
         # Create prompt template
         self.prompt = ChatPromptTemplate.from_template(FINANCE_AGENT_PROMPT)

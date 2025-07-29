@@ -1,7 +1,7 @@
-# Importar todos los agentes para que se registren automáticamente
+# Importar el registro optimizado
 from . import registry
 
-# Importar solo los agentes que están en el catálogo del pipeline_planner
+# Importar solo las clases de agentes para registro (no crear instancias)
 from .sales_agent.agent import SalesAgent
 from .finance_agent.agent import FinanceAgent
 from .inventory_agent.agent import InventoryAgent
@@ -12,18 +12,24 @@ from .client_agent.agent import ClientAgent
 # Exportar el registro y funciones útiles
 from .registry import (
     AGENT_REGISTRY,
+    AGENT_INSTANCES,
     get_agent,
     list_available_agents,
     agent_exists,
+    preload_agent,
+    get_loaded_agents,
     BaseAgent,
     register_agent
 )
 
 __all__ = [
     'AGENT_REGISTRY',
+    'AGENT_INSTANCES',
     'get_agent', 
     'list_available_agents',
     'agent_exists',
+    'preload_agent',
+    'get_loaded_agents',
     'BaseAgent',
     'register_agent'
 ] 
