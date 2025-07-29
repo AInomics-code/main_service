@@ -71,52 +71,30 @@ class VectorDBUpdater:
             logger.error(f"Error obteniendo embeddings: {e}")
             raise
 
-    def create_index_if_not_exists(self):
-        """Crear el índice si no existe"""
+    def verify_index_exists(self):
+        """Verificar que el índice existe sin modificarlo"""
         try:
             if not self.opensearch_client.indices.exists(index=self.index_name):
-                index_mapping = {
-                    "mappings": {
-                        "properties": {
-                            "embeddings": {
-                                "type": "knn_vector",
-                                "dimension": 1536,
-                                "method": {
-                                    "name": "hnsw",
-                                    "space_type": "dotproduct",
-                                    "engine": "faiss",
-                                    "parameters": {
-                                        "ef_construction": 128,
-                                        "m": 16
-                                    }
-                                }
-                            },
-                            "content": {
-                                "type": "text"
-                            },
-                            "table_name": {
-                                "type": "keyword"
-                            }
-                        }
-                    },
-                    "settings": {
-                        "index": {
-                            "knn": True,
-                            "knn.algo_param.ef_search": 100
-                        }
-                    }
-                }
-                self.opensearch_client.indices.create(index=self.index_name, body=index_mapping)
-                logger.info(f"Índice {self.index_name} creado exitosamente")
-            else:
-                logger.info(f"Índice {self.index_name} ya existe")
+                logger.error(f"El índice {self.index_name} no existe. No se puede proceder sin modificar el esquema.")
+                return False
+            
+            # Verificar que el mapping es compatible
+            current_mapping = self.opensearch_client.indices.get_mapping(index=self.index_name)
+            logger.info(f"Índice {self.index_name} existe y es compatible")
+            return True
+            
         except Exception as e:
-            logger.error(f"Error creando índice: {e}")
-            raise
+            logger.error(f"Error verificando índice: {e}")
+            return False
 
     def update_vector_db(self, schema_files_dir):
         """Actualizar la vector database con los archivos de schema"""
         try:
+            # Verificar que el índice existe antes de proceder
+            if not self.verify_index_exists():
+                logger.error("No se puede proceder sin un índice válido")
+                return
+
             if not os.path.exists(schema_files_dir):
                 logger.error(f"Directorio {schema_files_dir} no existe")
                 return
@@ -137,9 +115,9 @@ class VectorDBUpdater:
                 # Obtener embeddings
                 embeddings = self.get_embeddings(content)
                 
-                # Preparar documento para indexar
+                # Preparar documento para indexar (usando 'embedding' en lugar de 'embeddings')
                 document = {
-                    "embeddings": embeddings,
+                    "embedding": embeddings,
                     "content": content,
                     "table_name": table_name
                 }
@@ -191,7 +169,6 @@ class VectorDBUpdater:
 
 if __name__ == "__main__":
     updater = VectorDBUpdater()
-    # Crear el índice si no existe
-    updater.create_index_if_not_exists()
-    # Actualizar la vector database con los archivos de schema_files
+    # Solo actualizar la vector database con los archivos de schema_files
+    # NO crear ni modificar el índice
     updater.update_vector_db(os.path.join(os.path.dirname(__file__), "schema_files"))
