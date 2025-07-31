@@ -134,6 +134,15 @@ class DynamicAgentGraph:
                             # Pasar SOLO el contenido relevante del schema
                             if agent_name == "StrategyAgent":
                                 result = agent.synthesize_results(user_input, str(results), None, relevant_schema_content)
+                            elif agent_name == "Supervisor":
+                                # El Supervisor necesita usar combine_results para sintetizar resultados
+                                result = agent.combine_results(
+                                    user_input,
+                                    str(state.get("pipeline_plan", {})),
+                                    state.get("detected_language", "Unknown"),
+                                    str(results),
+                                    relevant_schema_content
+                                )
                             else:
                                 result = agent.run(user_input, None, relevant_schema_content)
                             

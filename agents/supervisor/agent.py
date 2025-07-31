@@ -44,18 +44,21 @@ class SupervisorAgent(BaseAgent):
             else:
                 schema_context = "No relevant schema content available"
             
-            # Crear el prompt para síntesis
-            synthesis_prompt = SUPERVISOR_PROMPT.format(
+            # Usar el ChatPromptTemplate correctamente
+            prompt = self._create_prompt()
+            
+            # Formatear el prompt con las variables correctas
+            formatted_prompt = prompt.format_messages(
                 relevant_schema_content=schema_context,
                 user_input=user_input,
                 detected_language=detected_language,
                 pipeline_plan=pipeline_plan,
                 agent_results=agent_results,
-                agent_scratchpad=""  # No necesitamos scratchpad para síntesis
+                agent_scratchpad=""
             )
             
             # Usar LLM directamente para síntesis sin herramientas
-            response = self.synthesis_llm.invoke(synthesis_prompt)
+            response = self.synthesis_llm.invoke(formatted_prompt)
             return response.content
             
         except Exception as e:

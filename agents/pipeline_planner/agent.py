@@ -18,12 +18,12 @@ class PipelinePlannerAgent:
     
     def _validate_and_fix_pipeline(self, pipeline: list) -> list:
         if not pipeline or not isinstance(pipeline, list):
-            return [[self.default_agent], ["Supervisor"]]
+            return [[self.default_agent]]  # NO agregar Supervisor aquí
         
         if len(pipeline) == 1 and len(pipeline[0]) == 1:
             single_agent = pipeline[0][0]
             if single_agent in self.available_agents:
-                return pipeline + [["Supervisor"]]
+                return pipeline  # NO agregar Supervisor aquí
         
         # Validar que todos los agentes existan
         validated_pipeline = []
@@ -38,9 +38,8 @@ class PipelinePlannerAgent:
         elif self.default_agent not in validated_pipeline[-1]:
             validated_pipeline.append([self.default_agent])
         
-        # Siempre agregar el Supervisor al final
-        if "Supervisor" not in validated_pipeline[-1]:
-            validated_pipeline.append(["Supervisor"])
+        # NO agregar el Supervisor automáticamente - el grafo ya tiene un nodo supervisor final
+        # El Supervisor se ejecutará en el nodo supervisor del grafo, no en el pipeline
         
         return validated_pipeline
     
