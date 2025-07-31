@@ -1,6 +1,7 @@
 from fastapi import Request
 from pydantic import BaseModel
 from agents.graph import DynamicAgentGraph
+from services.chat_history import chat_history_service
 import threading
 
 class ServiceManager:
@@ -66,22 +67,72 @@ _service_manager = ServiceManager()
 
 class UserRequest(BaseModel):
     message: str
+    session_id: str = None
 
 async def invoke_agent(request: Request):
     try:
         body = await request.json()
         user_request = UserRequest(**body)
         
+        # Manejar session_id
+        session_id = user_request.session_id
+        
+        # Si no hay session_id, crear una nueva sesión
+        if not session_id:
+            session_id = chat_history_service.create_session()
+            print(f"🆕 Nueva sesión creada: {session_id}")
+        else:
+            # Verificar si la sesión existe
+            if not chat_history_service.session_exists(session_id):
+                session_id = chat_history_service.create_session()
+                print(f"🔄 Sesión no encontrada, nueva sesión creada: {session_id}")
+        
         # Obtener el grafo (se inicializa automáticamente si es necesario)
         graph = _service_manager.get_graph()
         
-        # Usar instancia del grafo
-        result = graph.process(user_request.message)
+        # Obtener historial de la sesión para contexto
+        chat_history = chat_history_service.get_history(session_id, limit=5)
+        
+        # Construir contexto con historial si existe
+        context_message = user_request.message
+        if chat_history:
+            # Crear contexto con los últimos mensajes
+            context_parts = []
+            for msg in reversed(chat_history):  # Invertir para orden cronológico
+                context_parts.append(f"Usuario: {msg['user_message']}")
+                context_parts.append(f"IA: {msg['ai_response']}")
+            
+            context_parts.append(f"Usuario: {user_request.message}")
+            context_message = "\n".join(context_parts)
+            print(f"📝 Usando historial de {len(chat_history)} mensajes para contexto")
+        
+        # Usar instancia del grafo con contexto
+        result = graph.process(context_message)
+        
+        # Guardar el mensaje y respuesta en el historial
+        metadata = {
+            "original_message": user_request.message,
+            "has_context": len(chat_history) > 0,
+            "context_length": len(chat_history)
+        }
+        
+        chat_history_service.add_message(
+            session_id=session_id,
+            message=user_request.message,
+            response=result,
+            metadata=metadata
+        )
+        
+        # Obtener información de la sesión
+        session_info = chat_history_service.get_session_info(session_id)
         
         return {
             "success": True,
             "result": result,
-            "message": user_request.message
+            "message": user_request.message,
+            "session_id": session_id,
+            "session_info": session_info,
+            "has_history": len(chat_history) > 0
         }
         
     except Exception as e:
