@@ -3,11 +3,14 @@ from .prompt import SUPERVISOR_PROMPT
 from ..base_agent import BaseAgent
 from ..registry import register_agent
 from typing import Dict, Any
+from config.hybrid_llm_manager import hybrid_llm_manager
 
 @register_agent("Supervisor")
 class SupervisorAgent(BaseAgent):
     def __init__(self):
         super().__init__("Supervisor")
+        # Obtener LLM para síntesis sin herramientas
+        self.synthesis_llm = hybrid_llm_manager.get_llm_for_agent("Supervisor")
     
     def _create_prompt(self) -> ChatPromptTemplate:
         """Crear el prompt template específico del SupervisorAgent"""
@@ -33,7 +36,7 @@ class SupervisorAgent(BaseAgent):
             return f"Error al procesar la consulta: {str(e)}"
     
     def combine_results(self, user_input: str, pipeline_plan: str, detected_language: str, agent_results: str, relevant_schema_content: str = None) -> str:
-        """Método específico para combinar resultados"""
+        """Método específico para combinar resultados usando solo síntesis"""
         try:
             # Usar SOLO el contenido relevante del schema
             if relevant_schema_content and relevant_schema_content != "No relevant schema content provided":
@@ -41,14 +44,19 @@ class SupervisorAgent(BaseAgent):
             else:
                 schema_context = "No relevant schema content available"
             
-            response = self.agent_executor.invoke({
-                "user_input": user_input,
-                "database_schema": schema_context,
-                "pipeline_plan": pipeline_plan,
-                "detected_language": detected_language,
-                "agent_results": agent_results,
-                "relevant_schema_content": relevant_schema_content or "No relevant schema content provided"
-            })
-            return response.get("output", "No se pudieron combinar los resultados.")
+            # Crear el prompt para síntesis
+            synthesis_prompt = SUPERVISOR_PROMPT.format(
+                relevant_schema_content=schema_context,
+                user_input=user_input,
+                detected_language=detected_language,
+                pipeline_plan=pipeline_plan,
+                agent_results=agent_results,
+                agent_scratchpad=""  # No necesitamos scratchpad para síntesis
+            )
+            
+            # Usar LLM directamente para síntesis sin herramientas
+            response = self.synthesis_llm.invoke(synthesis_prompt)
+            return response.content
+            
         except Exception as e:
             return f"Error al combinar resultados: {str(e)}" 
