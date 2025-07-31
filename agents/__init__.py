@@ -1,6 +1,9 @@
 # Importar el registro optimizado
 from . import registry
 
+# Importar la nueva base agent
+from .base_agent import BaseAgent
+
 # Importar solo las clases de agentes para registro (no crear instancias)
 from .sales_agent.agent import SalesAgent
 from .finance_agent.agent import FinanceAgent
@@ -18,11 +21,11 @@ from .registry import (
     agent_exists,
     preload_agent,
     get_loaded_agents,
-    BaseAgent,
     register_agent
 )
 
 __all__ = [
+    'BaseAgent',
     'AGENT_REGISTRY',
     'AGENT_INSTANCES',
     'get_agent', 
@@ -30,6 +33,5 @@ __all__ = [
     'agent_exists',
     'preload_agent',
     'get_loaded_agents',
-    'BaseAgent',
     'register_agent'
 ] 

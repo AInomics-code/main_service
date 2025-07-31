@@ -1,15 +1,11 @@
-from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from .prompt import LANGUAGE_DETECTION_PROMPT
-from config.settings import settings
+from config.hybrid_llm_manager import hybrid_llm_manager
 
 class LanguageDetectorAgent:
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model="gpt-3.5-turbo",
-            temperature=0,
-            openai_api_key=settings.OPENAI_KEY
-        )
+        # Usar el manager híbrido para obtener LLM especializado (gpt-3.5-turbo)
+        self.llm = hybrid_llm_manager.get_llm_for_agent("LanguageDetector")
         self.prompt = ChatPromptTemplate.from_template(LANGUAGE_DETECTION_PROMPT)
     
     def detect_language(self, user_input: str) -> str:

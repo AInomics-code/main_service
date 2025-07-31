@@ -2,36 +2,47 @@ from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from .prompt import PIPELINE_PLANNER_PROMPT
 from config.settings import settings
+from config.hybrid_llm_manager import hybrid_llm_manager
+from config.hybrid_llm_config import AGENT_CONFIG
 import json
 
 class PipelinePlannerAgent:
     def __init__(self):
-        self.llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0,
-            openai_api_key=settings.OPENAI_KEY
-        )
+        # Usar el manager híbrido para obtener LLM especializado
+        self.llm = hybrid_llm_manager.get_llm_for_agent("PipelinePlanner")
         self.prompt = ChatPromptTemplate.from_template(PIPELINE_PLANNER_PROMPT)
+        
+        # Obtener configuración de agentes disponibles
+        self.available_agents = list(AGENT_CONFIG.keys())
+        self.default_agent = "StrategyAgent"  # Agente por defecto
     
     def _validate_and_fix_pipeline(self, pipeline: list) -> list:
         if not pipeline or not isinstance(pipeline, list):
-            return [["StrategyAgent"]]
+            return [[self.default_agent], ["Supervisor"]]
         
         if len(pipeline) == 1 and len(pipeline[0]) == 1:
             single_agent = pipeline[0][0]
-            if single_agent in ["StrategyAgent"]:
-                return pipeline
+            if single_agent in self.available_agents:
+                return pipeline + [["Supervisor"]]
         
-        last_step = pipeline[-1] if pipeline else []
-        has_strategy = "StrategyAgent" in last_step
+        # Validar que todos los agentes existan
+        validated_pipeline = []
+        for step in pipeline:
+            validated_step = [agent for agent in step if agent in self.available_agents]
+            if validated_step:
+                validated_pipeline.append(validated_step)
         
-        if not has_strategy:
-            if last_step and any(agent != "StrategyAgent" for agent in last_step):
-                pipeline.append(["StrategyAgent"])
-            else:
-                pipeline[-1] = ["StrategyAgent"]
+        # Asegurar que el agente por defecto esté al final (antes del supervisor)
+        if not validated_pipeline:
+            validated_pipeline = [[self.default_agent]]
+        elif self.default_agent not in validated_pipeline[-1]:
+            validated_pipeline.append([self.default_agent])
         
-        return pipeline
+        # Siempre agregar el Supervisor al final
+        if "Supervisor" not in validated_pipeline[-1]:
+            validated_pipeline.append(["Supervisor"])
+        
+        return validated_pipeline
     
     def plan_pipeline(self, user_question: str) -> dict:
         try:
@@ -42,7 +53,7 @@ class PipelinePlannerAgent:
                 result = json.loads(response.content.strip())
                 if "pipeline" not in result:
                     return {
-                        "pipeline": [["StrategyAgent"]],
+                        "pipeline": [[self.default_agent]],
                         "error": "Respuesta no contiene clave 'pipeline'"
                     }
                 
@@ -52,12 +63,12 @@ class PipelinePlannerAgent:
             except json.JSONDecodeError:
                 print(f"Error: {response.content}")
                 return {
-                    "pipeline": [["StrategyAgent"]],
+                    "pipeline": [[self.default_agent]],
                     "error": "No se pudo parsear la respuesta como JSON"
                 }
                 
         except Exception as e:
             return {
-                "pipeline": [["StrategyAgent"]],
+                "pipeline": [[self.default_agent]],
                 "error": f"Error en el agente: {str(e)}"
             } 

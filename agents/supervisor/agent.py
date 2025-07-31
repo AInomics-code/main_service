@@ -1,36 +1,17 @@
 from langchain.prompts import ChatPromptTemplate
-from langchain.agents import AgentExecutor, create_openai_tools_agent
 from .prompt import SUPERVISOR_PROMPT
-from ..registry import BaseAgent, register_agent
-from tools.database_singleton import database_singleton
+from ..base_agent import BaseAgent
+from ..registry import register_agent
 from typing import Dict, Any
 
 @register_agent("Supervisor")
 class SupervisorAgent(BaseAgent):
     def __init__(self):
-        # Usar singleton para LLM y herramientas de base de datos
-        self.llm = database_singleton.get_llm()
-        self.db_tool = database_singleton.get_database_tool()
-        
-        # Create prompt template
-        self.prompt = ChatPromptTemplate.from_template(SUPERVISOR_PROMPT)
-        
-        # Create custom agent with database tools and our prompt
-        self.agent = create_openai_tools_agent(
-            llm=self.llm,
-            tools=self.db_tool.get_tools(),
-            prompt=self.prompt
-        )
-        
-        # Create agent executor with limits to prevent infinite loops
-        self.agent_executor = AgentExecutor(
-            agent=self.agent,
-            tools=self.db_tool.get_tools(),
-            verbose=True,
-            max_iterations=6,  # Máximo 6 iteraciones para evitar loops infinitos
-            early_stopping_method="generate",  # Para temprano cuando se genera una respuesta
-            handle_parsing_errors=True  # Manejo de errores de parsing
-        )
+        super().__init__("Supervisor")
+    
+    def _create_prompt(self) -> ChatPromptTemplate:
+        """Crear el prompt template específico del SupervisorAgent"""
+        return ChatPromptTemplate.from_template(SUPERVISOR_PROMPT)
     
     def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:
         """Método estándar que implementa la interfaz BaseAgent"""

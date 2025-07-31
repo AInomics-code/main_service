@@ -1,40 +1,17 @@
 from langchain.prompts import ChatPromptTemplate
-from langchain.agents import AgentExecutor, create_openai_tools_agent
 from .prompt import SALES_AGENT_PROMPT
-from ..registry import BaseAgent, register_agent
-from tools.database_singleton import database_singleton
+from ..base_agent import BaseAgent
+from ..registry import register_agent
 from typing import Dict, Any
 
 @register_agent("SalesAgent")
 class SalesAgent(BaseAgent):
     def __init__(self):
-        # Usar singleton para LLM y herramientas de base de datos
-        self.llm = database_singleton.get_llm()
-        self.db_tool = database_singleton.get_database_tool()
-        
-        # Create prompt template
-        self.prompt = ChatPromptTemplate.from_template(SALES_AGENT_PROMPT)
-        
-        # Create custom agent with database tools and our prompt
-        self.agent = create_openai_tools_agent(
-            llm=self.llm,
-            tools=self.db_tool.get_tools(),
-            prompt=self.prompt
-        )
-        
-        # Create agent executor with limits to prevent infinite loops
-        self.agent_executor = AgentExecutor(
-            agent=self.agent,
-            tools=self.db_tool.get_tools(),
-            verbose=True,
-            max_iterations=3,  # Reduce a 3 iteraciones máximo
-            max_execution_time=30,  # Tiempo máximo de 30 segundos
-            early_stopping_method="force",  # Cambia a "force" en lugar de "generate"
-            handle_parsing_errors=True,
-            return_intermediate_steps=True,  # Para debug
-            # Configuración adicional para prevenir loops
-            trim_intermediate_steps=-1  # Mantiene solo el último paso
-        )
+        super().__init__("SalesAgent")
+    
+    def _create_prompt(self) -> ChatPromptTemplate:
+        """Crear el prompt template específico del SalesAgent"""
+        return ChatPromptTemplate.from_template(SALES_AGENT_PROMPT)
     
     def run(self, user_input: str, database_schema: Dict[str, Any] = None, relevant_schema_content: str = None) -> str:
         """Método estándar que implementa la interfaz BaseAgent"""

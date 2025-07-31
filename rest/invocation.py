@@ -4,7 +4,7 @@ from agents.graph import DynamicAgentGraph
 import threading
 
 class ServiceManager:
-    """Singleton para manejar la inicialización de servicios"""
+    """Singleton para manejar la inicialización de servicios con sistema híbrido"""
     _instance = None
     _lock = threading.Lock()
     _initialized = False
@@ -21,7 +21,7 @@ class ServiceManager:
             self._graph = None
     
     def initialize_services(self):
-        """Inicializa servicios costosos al startup"""
+        """Inicializa servicios costosos al startup con sistema híbrido"""
         if self._initialized:
             return self._graph
         
@@ -29,13 +29,24 @@ class ServiceManager:
             if self._initialized:  # Double-check locking
                 return self._graph
             
-            print("🚀 Inicializando servicios de IA...")
+            print("🚀 Inicializando servicios de IA con sistema híbrido...")
             
-            # Pre-inicializar solo el grafo (los agentes se cargarán lazy)
+            # Pre-inicializar LLMs críticos
+            print("🔄 Pre-cargando LLMs críticos...")
+            from config.hybrid_llm_manager import hybrid_llm_manager
+            hybrid_llm_manager.preload_critical_agents()
+            
+            # Mostrar información de LLMs cargados
+            loaded_agents = hybrid_llm_manager.get_loaded_agents()
+            print("✅ LLMs cargados:")
+            for agent, info in loaded_agents.items():
+                print(f"   - {agent}: {info}")
+            
+            # Pre-inicializar el grafo
             print("🔄 Inicializando DynamicAgentGraph...")
             self._graph = DynamicAgentGraph()
             
-            # Pre-cargar solo el agente más común (StrategyAgent)
+            # Pre-cargar agente crítico (StrategyAgent)
             print("🔄 Pre-cargando agente crítico (StrategyAgent)...")
             from agents.registry import preload_agent
             preload_agent("StrategyAgent")

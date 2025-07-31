@@ -4,6 +4,7 @@ from .pipeline_planner.agent import PipelinePlannerAgent
 from .language_detector.agent import LanguageDetectorAgent
 from .supervisor.agent import SupervisorAgent
 from .registry import get_agent, list_available_agents, agent_exists
+from config.hybrid_llm_config import AGENT_CONFIG
 
 class AgentState(TypedDict):
     user_input: str
@@ -59,9 +60,11 @@ class DynamicAgentGraph:
             plan = self.pipeline_planner.plan_pipeline(state["user_input"])
             return {"pipeline_plan": plan}
         except Exception as e:
+            # Usar configuración en lugar de hardcoding
+            default_agent = AGENT_CONFIG.get("StrategyAgent", {}).get("default_fallback", "StrategyAgent")
             return {
                 "pipeline_plan": {
-                    "pipeline": [["StrategyAgent"]],
+                    "pipeline": [[default_agent]],
                     "error": f"Error en pipeline planner: {str(e)}"
                 }
             }
@@ -113,7 +116,9 @@ class DynamicAgentGraph:
                     }
                 }
             
-            pipeline = pipeline_plan.get("pipeline", [["StrategyAgent"]])
+            # Usar configuración en lugar de hardcoding
+            default_agent = AGENT_CONFIG.get("StrategyAgent", {}).get("default_fallback", "StrategyAgent")
+            pipeline = pipeline_plan.get("pipeline", [[default_agent]])
             results = []
             
             # Ejecutar cada paso del pipeline
