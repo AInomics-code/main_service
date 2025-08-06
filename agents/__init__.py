@@ -11,6 +11,7 @@ from .inventory_agent.agent import InventoryAgent
 from .field_ops_agent.agent import FieldOpsAgent
 from .strategy_agent.agent import StrategyAgent
 from .client_agent.agent import ClientAgent
+from .clarification.agent import ClarificationAgent
 
 # Exportar el registro y funciones útiles
 from .registry import (

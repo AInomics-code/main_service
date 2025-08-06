@@ -39,6 +39,12 @@ HYBRID_LLM_CONFIG = {
             "temperature": 0,
             "max_tokens": 500,
             "openai_api_key": None
+        },
+        "ClarificationAgent": {
+            "model": "gpt-4o-mini",
+            "temperature": 0,  # Muy preciso para análisis
+            "max_tokens": 500,
+            "openai_api_key": None
         }
     }
 }
@@ -79,5 +85,10 @@ AGENT_CONFIG = {
         "max_iterations": 6,
         "max_execution_time": 60,
         "early_stopping_method": "generate"
+    },
+    "ClarificationAgent": {
+        "max_iterations": 1,  # Solo análisis, no iteraciones
+        "max_execution_time": 10,
+        "early_stopping_method": "force"
     }
 } 

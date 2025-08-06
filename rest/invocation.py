@@ -106,34 +106,50 @@ async def invoke_agent(request: Request):
             context_message = "\n".join(context_parts)
             print(f"📝 Usando historial de {len(chat_history)} mensajes para contexto")
         
-        # Usar instancia del grafo con contexto
-        result = graph.process(context_message)
+        # Usar instancia del grafo con contexto y historial
+        result = graph.process(user_request.message, chat_history)
         
-        # Guardar el mensaje y respuesta en el historial
-        metadata = {
-            "original_message": user_request.message,
-            "has_context": len(chat_history) > 0,
-            "context_length": len(chat_history)
-        }
-        
-        chat_history_service.add_message(
-            session_id=session_id,
-            message=user_request.message,
-            response=result,
-            metadata=metadata
-        )
-        
-        # Obtener información de la sesión
-        session_info = chat_history_service.get_session_info(session_id)
-        
-        return {
+        # Preparar respuesta base
+        response_data = {
             "success": True,
-            "result": result,
             "message": user_request.message,
             "session_id": session_id,
-            "session_info": session_info,
             "has_history": len(chat_history) > 0
         }
+        
+        # Si necesita clarificación, no guardar en historial aún
+        if result.get("type") == "clarification_needed":
+            response_data.update({
+                "result": result,  # Ahora siempre es la estructura completa
+                "needs_clarification": True,
+                "clarification_questions": result.get("clarification_questions", []),
+                "reason": result.get("reason")
+            })
+        else:
+            # Guardar el mensaje y respuesta en el historial solo si no necesitaba clarificación
+            metadata = {
+                "original_message": user_request.message,
+                "has_context": len(chat_history) > 0,
+                "context_length": len(chat_history)
+            }
+            
+            chat_history_service.add_message(
+                session_id=session_id,
+                message=user_request.message,
+                response=result.get("final_response", str(result)),
+                metadata=metadata
+            )
+            
+            # Obtener información de la sesión
+            session_info = chat_history_service.get_session_info(session_id)
+            
+            response_data.update({
+                "result": result,
+                "session_info": session_info,
+                "needs_clarification": False
+            })
+        
+        return response_data
         
     except Exception as e:
         return {

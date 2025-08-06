@@ -3,11 +3,13 @@ from langgraph.graph import StateGraph, END
 from .pipeline_planner.agent import PipelinePlannerAgent
 from .language_detector.agent import LanguageDetectorAgent
 from .supervisor.agent import SupervisorAgent
+from .clarification.agent import ClarificationAgent
 from .registry import get_agent, list_available_agents, agent_exists
 from config.hybrid_llm_config import AGENT_CONFIG
 
 class AgentState(TypedDict):
     user_input: str
+    clarification_result: Dict[str, Any] | None  # Nuevo campo
     pipeline_plan: Dict[str, Any] | None
     detected_language: str | None
     agent_results: Dict[str, Any] | None
@@ -15,6 +17,7 @@ class AgentState(TypedDict):
 
 class DynamicAgentGraph:
     def __init__(self):
+        self.clarification_agent = ClarificationAgent()  # Nuevo agente
         self.pipeline_planner = PipelinePlannerAgent()
         self.language_detector = LanguageDetectorAgent()
         self.supervisor = SupervisorAgent()
@@ -32,7 +35,10 @@ class DynamicAgentGraph:
     def _build_graph(self) -> StateGraph:
         workflow = StateGraph(AgentState)
         
-        # Nodos paralelos iniciales
+        # Nodo de clarificación (nuevo)
+        workflow.add_node("clarification", self._clarification_node)
+        
+        # Nodos paralelos después de clarificación
         workflow.add_node("pipeline_planner", self._pipeline_planner_node)
         workflow.add_node("detect_language", self._detect_language_node)
         
@@ -42,17 +48,58 @@ class DynamicAgentGraph:
         # Nodo supervisor final
         workflow.add_node("supervisor", self._supervisor_node)
         
-        # Puntos de entrada paralelos
-        workflow.set_entry_point("pipeline_planner")
-        workflow.set_entry_point("detect_language")
+        # Punto de entrada: clarificación
+        workflow.set_entry_point("clarification")
         
-        # Flujo: paralelo inicial -> ejecutar agentes -> supervisor -> END
+        # Flujo condicional basado en clarificación
+        workflow.add_conditional_edges(
+            "clarification",
+            self._should_proceed,
+            {
+                "needs_clarification": END,  # Terminar si necesita clarificación
+                "proceed": "pipeline_planner"  # Continuar con el pipeline
+            }
+        )
+        
+        # Flujo normal después de clarificación
         workflow.add_edge("pipeline_planner", "execute_agents")
         workflow.add_edge("detect_language", "execute_agents")
         workflow.add_edge("execute_agents", "supervisor")
         workflow.add_edge("supervisor", END)
         
         return workflow.compile()
+    
+    def _clarification_node(self, state: AgentState) -> AgentState:
+        """Nodo que analiza si la consulta necesita clarificación"""
+        try:
+            # Obtener historial de chat si está disponible
+            chat_history = getattr(self, '_chat_history', [])
+            
+            clarification_result = self.clarification_agent.analyze_query(
+                state["user_input"], 
+                chat_history
+            )
+            
+            return {"clarification_result": clarification_result}
+            
+        except Exception as e:
+            return {
+                "clarification_result": {
+                    "needs_clarification": False,
+                    "clarification_questions": None,
+                    "reason": f"Error en clarificación: {str(e)}",
+                    "can_proceed": True
+                }
+            }
+    
+    def _should_proceed(self, state: AgentState) -> str:
+        """Función condicional para determinar el flujo"""
+        clarification_result = state.get("clarification_result", {})
+        
+        if clarification_result.get("needs_clarification", False):
+            return "needs_clarification"
+        else:
+            return "proceed"
     
     def _pipeline_planner_node(self, state: AgentState) -> AgentState:
         """Nodo que planifica el pipeline de agentes"""
@@ -212,9 +259,13 @@ class DynamicAgentGraph:
         except Exception as e:
             return {"final_response": f"Error en supervisor: {str(e)}"}
     
-    def process(self, user_input: str) -> dict:
+    def process(self, user_input: str, chat_history: list = None) -> dict:
+        # Guardar historial para usar en clarificación
+        self._chat_history = chat_history or []
+        
         initial_state = {
             "user_input": user_input,
+            "clarification_result": None,  # Nuevo campo
             "pipeline_plan": None,
             "detected_language": None,
             "agent_results": None,
@@ -222,4 +273,16 @@ class DynamicAgentGraph:
         }
         
         result = self.graph.invoke(initial_state)
+        
+        # Si necesita clarificación, generar respuesta apropiada manteniendo estructura consistente
+        if result.get("clarification_result", {}).get("needs_clarification"):
+            clarification_questions = result["clarification_result"].get("clarification_questions", [])
+            followup_response = self.clarification_agent.generate_followup_response(clarification_questions)
+            
+            # Mantener la misma estructura pero con final_response para clarificación
+            result["final_response"] = followup_response
+            result["type"] = "clarification_needed"
+            result["clarification_questions"] = clarification_questions
+            result["reason"] = result["clarification_result"].get("reason")
+        
         return result 
