@@ -28,5 +28,5 @@ COLUMNAS:
 - ubicacion2 (nvarchar): Ubicación 2 del producto en el depósito
 - existencia (numeric): Cantidad existente en el depósito
 - cantidad_separada (numeric): Cantidad separada para pedidos
-- inventario_madre (numeric): Inventario madre del producto
+- inventario_madre (numeric): Cantidad de inventario del material disponible para venta
 - codigo_de_area_de_despacho (numeric): Código del área de despacho

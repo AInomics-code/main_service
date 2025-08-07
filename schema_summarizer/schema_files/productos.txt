@@ -18,6 +18,7 @@ EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Facilítame el precio de X producto en la cadena tal o en el cliente tal
 - ¿Cuánto es la rentabilidad por SKU?
 - Muéstrame el inventario con sus días de determinada familia de productos
+- Cual es el costo del producto?
 
 COLUMNAS:
 - codigo_de_producto (nvarchar): Código único del producto
