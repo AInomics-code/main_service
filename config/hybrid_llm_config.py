@@ -53,33 +53,33 @@ HYBRID_LLM_CONFIG = {
 AGENT_CONFIG = {
     "SalesAgent": {
         "max_iterations": 3,
-        "max_execution_time": 30,
-        "early_stopping_method": "force"
+        "max_execution_time": 120,
+        "early_stopping_method": "generate"
     },
     "FinanceAgent": {
         "max_iterations": 3,
-        "max_execution_time": 30,
-        "early_stopping_method": "force"
+        "max_execution_time": 120,
+        "early_stopping_method": "generate"
     },
     "InventoryAgent": {
         "max_iterations": 3,
-        "max_execution_time": 30,
-        "early_stopping_method": "force"
+        "max_execution_time": 120,
+        "early_stopping_method": "generate"
     },
     "FieldOpsAgent": {
         "max_iterations": 3,
-        "max_execution_time": 30,
-        "early_stopping_method": "force"
+        "max_execution_time": 120,
+        "early_stopping_method": "generate"
     },
     "ClientAgent": {
         "max_iterations": 3,
-        "max_execution_time": 30,
-        "early_stopping_method": "force"
+        "max_execution_time": 120,
+        "early_stopping_method": "generate"
     },
     "StrategyAgent": {
         "max_iterations": 3,
-        "max_execution_time": 30,
-        "early_stopping_method": "force"
+        "max_execution_time": 120,
+        "early_stopping_method": "generate"
     },
     "Supervisor": {
         "max_iterations": 6,

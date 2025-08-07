@@ -33,7 +33,7 @@ COLUMNAS:
 - codigo_de_tipo (nvarchar): Código del tipo del producto
 - codigo_de_impuesto (nvarchar): Código del impuesto aplicable
 - origen (nvarchar): Origen del producto
-- marca (nvarchar): Marca del producto
+- marca (nvarchar): Marca del producto. Si el usuario quiere filtrar sus propios productos se debe tomar los valores donde esta columa sea igual a "LA DOÑA"
 - fecha_de_creacion (datetime): Fecha de creación del producto
 - modelo (nvarchar): Modelo del producto
 - area (nvarchar): Área del producto

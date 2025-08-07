@@ -1,10 +1,12 @@
 TABLA: backorder
-DESCRIPCIÓN: Tabla que registra los pedidos pendientes o backorders del sistema. Usa esta tabla cuando quieras analizar pedidos pendientes, entregas parciales o productos faltantes en el inventario.
+DESCRIPCIÓN: Tabla que registra los pedidos pendientes o backorders del sistema. Usa esta tabla cuando quieras analizar pedidos pendientes, entregas parciales o productos faltantes en el inventario. A menos que el usuario explicitamente diga lo contrario siempre da el valor de backorder en unidades y en valor monetario de forma separada.
 
 REGLAS DE NEGOCIO:
 - Los backorders representan productos que fueron pedidos pero no están disponibles en el momento de la venta
-- La cantidad_pendiente debe ser igual a cantidad_perdida menos cantidad_entregada
+- Si el usuario pide calcular el backorder en valor monetario usa la columna costo
+- Si el usuario pide calcular el backorder en unidades de inventario usa la columna cantidad_pendiente
 - Solo se deben considerar backorders activos para análisis de inventario
+- A menos que el usuario lo pida explicitamente siempre da dos valores: el total en unidades de inventario y el total en costo monetario. Por ejemplo preguntas como "cual fue el valor total del backorder del mes de junio del 2024" debe dar el valor total en cantidad de inventario usando la columna cantidad_perdida y tambien el valor total en costo usando la columna costo
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuantos backorders tenemos actualmente?
@@ -22,7 +24,7 @@ COLUMNAS:
 - numero_de_factura (nvarchar): Número de factura asociado
 - linea (int): Número de línea del pedido
 - codigo_de_producto (nvarchar): Código del producto solicitado
-- cantidad_perdida (numeric): Cantidad perdida del pedido
+- cantidad_perdida (numeric): Cantidad perdida del pedido. Permite calcular el backorder en terminos de unidades de inventario
 - cantidad_entregada (numeric): Cantidad ya entregada
 - cantidad_pendiente (numeric): Cantidad pendiente por entregar
 - precio (numeric): Precio unitario del producto
@@ -32,6 +34,6 @@ COLUMNAS:
 - codigo_de_deposito (nvarchar): Código del depósito de origen
 - codigo_de_clase (nvarchar): Código de la clase del producto
 - factor_de_conversion (int): Factor de conversión de unidades
-- costo (numeric): Costo unitario del producto
+- costo (numeric): Costo unitario del producto. Permite calcular el backorder en terminos de costo monetario
 - fecha_de_la_factura (datetime): Fecha de la factura
 - codigo_supervisor_trade (nvarchar): Código del supervisor trade
