@@ -1,5 +1,5 @@
 TABLA: ventas
-DESCRIPCIÓN: Tabla principal de ventas. Usa esta tabla cuando quieras analizar las ventas por periodo. La venta bruta es igual a la sumatoria de la columnas importe_de_la_linea menos la sumatoria de descuento_de_la_linea
+DESCRIPCIÓN: Tabla principal de ventas. Usa esta tabla cuando quieras analizar las ventas por periodo. La venta bruta es igual a la sumatoria de la columnas importe_de_la_linea
 
 REGLAS DE NEGOCIO:
 - Si el usuario te pide totalizar las ventas no debes tener en cuenta los datos donde tipo_de_transaccion sea igual a devolucion
