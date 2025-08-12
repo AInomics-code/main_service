@@ -396,9 +396,9 @@ async def invoke_agent(request: Request):
     # Get the user query from request body
     try:
         body = await request.json()
-        user_query = body.get("query", "Cuales son los productos con mas backorder de mi inventario y como puedo reducirlo?")
+        user_query = body.get("message", body.get("query", ""))
     except:
-        user_query = "Cuales son los productos con mas backorder de mi inventario y como puedo reducirlo?"
+        user_query = ""
     
     print(f"🚀 Starting agent invocation for query: {user_query}")
     
