@@ -125,7 +125,7 @@ INSTRUCTIONS:
 - Build upon previous analysis results when applicable
 
 DATABASE ACCESS: You can execute SQL queries using query_database(query, "sqlserver") if needed for sales data.
-Available tables include: ventas, vendedores, clientes, productos"""
+The system will provide schema context automatically to help you generate appropriate queries."""
     
     # Create a simple agent that can use database queries
     sales_agent_executor = sales_llm.bind_tools([query_database])
@@ -174,7 +174,7 @@ INSTRUCTIONS:
 - Build upon previous analysis results when applicable
 
 DATABASE ACCESS: You can execute SQL queries using query_database(query, "sqlserver") if needed for financial data.
-Available tables include: ventas, productos, transacciones_inventario, clientes"""
+The system will provide schema context automatically to help you generate appropriate queries."""
     
     # Create a simple agent that can use database queries
     finance_agent_executor = finance_llm.bind_tools([query_database])
@@ -369,17 +369,23 @@ def get_schema_context(state):
         # Restore original logging level
         schema_logger.setLevel(original_level)
         
-        # Crear contexto del esquema
-        schema_context = f"""SCHEMA CONTEXT for query: "{query}"
+        # Crear contexto del esquema más específico
+        schema_context = f"""DATABASE SCHEMA INFORMATION for query: "{query}"
 
-Top 5 relevant tables:
+=== TOP 5 RELEVANT TABLES WITH EXACT COLUMN NAMES ===
 """
         
         for table in schema_summary["relevant_tables"]:
             schema_context += f"""
-Table: {table['table_name']}
-Relevance Score: {table['relevance_score']:.3f}
-Content: {table['content'][:500]}...
+🗂️ TABLE: {table['table_name']} (Relevance: {table['relevance_score']:.3f})
+📋 COLUMNS AND STRUCTURE:
+{table['content'][:800]}
+
+"""
+        
+        schema_context += """
+⚠️ IMPORTANT: Use ONLY these exact table and column names in your SQL queries.
+DO NOT assume or invent column names not shown above.
 """
         
         return {"schema_context": schema_context}
@@ -448,9 +454,7 @@ EXECUTION PROCESS:
 3. Always use tools - do not generate answers without them
 4. Show the actual results from the tools in your response
 
-CRITICAL: You must call query_database tool when dealing with sales data, totals, or any database queries. Example:
-- Step about "total sales in June and July 2024" → MUST call query_database with proper SQL
-- Use this SQL pattern for sales totals: SELECT SUM(importe_de_la_linea) FROM ventas WHERE...
+CRITICAL: You must call query_database tool when dealing with any database queries. The tool will generate appropriate SQL dynamically based on the step requirements and database schema context.
 
 You MUST use tools to complete each step. Do not provide answers without using the appropriate tools.""",
         ),
@@ -474,115 +478,144 @@ def database_agent(sql_query: str) -> str:
         print(f"   ❌ Database query failed: {e}")
         return f"Database error: {str(e)}"
 
-# Simple executor function that coordinates agents
+# Simple executor that uses LLM with tools for dynamic execution
 def create_executor_with_context(state):
-    """Creates a simple executor that coordinates specialized agents"""
+    """Creates an executor that uses LLM agents with database tools for dynamic query generation"""
     def execute_step(step_input):
         from langchain_core.messages import HumanMessage
         
         messages = step_input["messages"]
         step_content = messages[0].content
+        schema_context = state.get("schema_context", "")
         
-        # Check if we already have data in memory first
-        has_db_data = False
-        if hasattr(current_memory, 'memory') and current_memory.memory:
-            for key, value in current_memory.memory.items():
-                if 'database' in key.lower() or 'ventas' in str(value).lower():
-                    has_db_data = True
-                    print(f"   🧠 Using cached data from memory")
-                    break
+        print(f"   🤖 LLM Executor: Analyzing step requirements")
+        print(f"   📊 Schema context length: {len(schema_context)} chars")
         
-        # Check if step needs database data
-        needs_db = any(keyword in step_content.lower() for keyword in 
-                      ['total', 'sum', 'ventas', 'sales', 'query', 'database', 'sql'])
+        # Show a preview of schema context for debugging
+        if schema_context:
+            schema_preview = schema_context[:300].replace('\n', ' ')
+            print(f"   🗂️ Schema preview: {schema_preview}...")
+        else:
+            print(f"   ⚠️ WARNING: No schema context available!")
         
-        results = []
-        tools_used = []
+        # Create an executor LLM with access to all tools
+        executor_llm = ChatOpenAI(
+            api_key=settings.OPENAI_KEY,
+            model="gpt-4o-mini",
+            temperature=0.1,
+            verbose=True
+        )
         
-        if needs_db and not has_db_data:
-            print(f"   🗄️ Executing database query")
+        # Get memory context
+        memory_context = ""
+        if current_memory:
+            memory_context = current_memory.get_memory_context()
+        
+        # Create executor with all tools available
+        tools = [query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate]
+        executor_agent = create_react_agent(executor_llm, tools)
+        
+        # Enhanced prompt for dynamic tool usage
+        executor_prompt = f"""You are an intelligent executor that must complete this step by using the appropriate tools.
+
+STEP TO EXECUTE: {step_content}
+
+MEMORY CONTEXT:
+{memory_context}
+
+DATABASE SCHEMA CONTEXT (USE THESE EXACT TABLE AND COLUMN NAMES):
+{schema_context}
+
+AVAILABLE TOOLS:
+- query_database: Execute ANY SQL query you generate dynamically on the database
+- sales_agent: Sales analysis and insights
+- finance_agent: Financial calculations and analysis  
+- inventory_agent: Inventory management insights
+- field_ops_agent: Field operations analysis
+- calculate: Mathematical calculations
+
+EXECUTION INSTRUCTIONS:
+1. ANALYZE the step requirements carefully
+2. If data is needed from database, use query_database with a SQL query you generate dynamically
+3. CRITICAL: Use ONLY the table names and column names shown in the DATABASE SCHEMA CONTEXT above
+4. DO NOT invent or assume column names - use EXACTLY what's provided in the schema context
+5. Use the most appropriate agent tools for analysis after getting data
+6. Build upon previous results stored in memory when available
+
+SQL GENERATION RULES:
+- Use ONLY tables and columns from the schema context provided above
+- DO NOT assume foreign key relationships - check the schema first
+- If you need to join tables, verify the exact column names from the schema context
+- DO NOT use generic names like 'cliente_id' or 'producto_id' - use the exact column names
+
+CRITICAL: You MUST use ONLY the table and column names exactly as shown in the DATABASE SCHEMA CONTEXT.
+
+Execute this step now using the most appropriate tools:"""
+        
+        try:
+            # Execute with tools using react agent
+            print(f"   🔧 Invoking REACT executor agent with tools...")
             
-            # Extract relevant info for SQL query
-            if 'ventas' in step_content.lower() and ('junio' in step_content.lower() or 'julio' in step_content.lower()):
-                sql_query = """
-                SELECT 
-                    MONTH(fecha) as mes,
-                    SUM(importe_de_la_linea) as total_ventas
-                FROM ventas 
-                WHERE YEAR(fecha) = 2024 
-                    AND MONTH(fecha) IN (6, 7)
-                    AND tipo_de_transaccion != 'devolucion'
-                GROUP BY MONTH(fecha)
-                ORDER BY MONTH(fecha)
-                """
-                
-                # Use the working database tool from master branch
-                try:
-                    from tools.simple_db_tool import create_database_tool
-                    from config.settings import settings
-                    
-                    # Create database tool like in master
-                    db_tool = create_database_tool(settings.SQLSERVER_URL)
-                    db_result = db_tool._run(sql_query)
-                    
-                    # Show SQL and results together
-                    print(f"   📊 SQL: {sql_query.strip()}")
-                    print(f"   📈 Results: {db_result.split('Sample results:')[1].split('...')[0] if 'Sample results:' in db_result else db_result[:100]}")
-                    
-                except Exception as e:
-                    print(f"   ❌ Database error: {e}")
-                    db_result = f"Database error: {str(e)}"
-                results.append(f"Database result: {db_result}")
-                tools_used.append("database_agent")
-                
-                # Store database result in memory for future steps
-                if current_memory:
-                    current_memory.store("database_sales_result", db_result)
-                    current_memory.store("sales_data_processed", True)
-                
-                # Now use sales agent for analysis
-                analysis_prompt = f"Analyze these sales results: {db_result}. Provide insights for June and July 2024 sales totals."
-                sales_result = sales_agent.invoke({"query": analysis_prompt})
-                results.append(f"Sales analysis: {sales_result}")
-                tools_used.append("sales_agent")
-        
-        elif needs_db and has_db_data:
-            print(f"🧠 EXECUTOR: Using existing database data from memory")
+            # For react agent, we need to pass messages in the correct format
+            agent_input = {"messages": [HumanMessage(content=executor_prompt)]}
+            response = executor_agent.invoke(agent_input)
             
-            # Get data from memory
-            if current_memory:
-                db_result = current_memory.get("database_sales_result", "No data found in memory")
-                results.append(f"Database result (from memory): {db_result}")
-                tools_used.append("memory_retrieval")
+            # Extract the final message and tool usage from react agent response
+            tools_used = []
+            final_message = ""
+            
+            if 'messages' in response:
+                messages = response['messages']
+                print(f"   📝 Agent executed {len(messages)} messages")
                 
-                # Use appropriate agent for analysis/presentation
-                if 'present' in step_content.lower() or 'format' in step_content.lower():
-                    analysis_prompt = f"Present these sales results in a structured format: {db_result}. Focus on clear presentation of June and July 2024 totals."
+                # Look for tool calls in messages
+                for msg in messages:
+                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                        for tool_call in msg.tool_calls:
+                            tool_name = tool_call.get('name', 'unknown')
+                            tools_used.append(tool_name)
+                            print(f"      🛠️ Tool executed: {tool_name}")
+                            
+                            # Show SQL for database queries
+                            if tool_name == 'query_database' and 'args' in tool_call:
+                                query_arg = tool_call['args'].get('query', 'No query found')
+                                print(f"      📊 SQL Preview: {query_arg[:100]}...")
+                
+                # Get the final AI message
+                ai_messages = [msg for msg in messages if hasattr(msg, 'content') and hasattr(msg, 'type') and msg.type == 'ai']
+                if ai_messages:
+                    final_message = ai_messages[-1].content
                 else:
-                    analysis_prompt = f"Analyze these sales results: {db_result}. Provide insights for June and July 2024 sales totals."
-                
-                sales_result = sales_agent.invoke({"query": analysis_prompt})
-                results.append(f"Sales analysis: {sales_result}")
-                tools_used.append("sales_agent")
-        
-        if not results:
-            # Fallback - use appropriate agent based on content
-            if any(word in step_content.lower() for word in ['sales', 'ventas', 'selling']):
-                result = sales_agent.invoke({"query": step_content})
-                results.append(result)
-                tools_used.append("sales_agent")
+                    final_message = str(response)
             else:
-                results.append("No specific tools needed for this step")
-        
-        final_result = "\n\n".join(results)
-        
-        # Return in expected format with tools_used
-        class MockResponse:
-            def __init__(self, content, tools):
-                self.content = content
-                self.tools_used = tools
-        
-        return MockResponse(final_result, tools_used)
+                final_message = str(response)
+                print(f"   ⚠️ Unexpected response format from react agent")
+            
+            # Store results in memory if database was used
+            if current_memory and 'query_database' in tools_used:
+                current_memory.store(f"step_result_{len(current_memory.step_results)}", final_message)
+            
+            tools_summary = ', '.join(tools_used) if tools_used else 'None'
+            print(f"   ✅ Tools executed: {tools_summary}")
+            
+            # Return response
+            class MockResponse:
+                def __init__(self, content, tools):
+                    self.content = content
+                    self.tools_used = tools
+            
+            return MockResponse(final_message, tools_used)
+            
+        except Exception as e:
+            print(f"   ❌ Executor error: {e}")
+            error_response = f"Error executing step: {str(e)}"
+            
+            class MockResponse:
+                def __init__(self, content, tools):
+                    self.content = content
+                    self.tools_used = tools
+            
+            return MockResponse(error_response, ["error"])
     
     return execute_step
 
