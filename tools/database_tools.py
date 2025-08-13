@@ -17,9 +17,15 @@ def query_database(query: str, db_type: str = "sqlserver") -> str:
     Returns:
         Resultado de la consulta en formato JSON
     """
+    print(f"🗄️ QUERY_DATABASE TOOL CALLED")
+    print(f"   Database: {db_type}")
+    print(f"   Query: {query}")
+    
     try:
         results = db_manager.execute_query(query, db_type)
+        print(f"   ✅ Query executed successfully. Results count: {len(results) if isinstance(results, list) else 'N/A'}")
         return f"Query executed successfully. Results: {results}"
     except Exception as e:
+        print(f"   ❌ Database query error: {e}")
         logger.error(f"Database query error: {e}")
         return f"Error executing query: {str(e)}"
