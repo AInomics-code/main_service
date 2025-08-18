@@ -23,6 +23,7 @@ class ShortTermMemory:
         self.memory: Dict[str, Any] = {}
         self.execution_context: Dict[str, Any] = {}
         self.step_results: List[Dict[str, Any]] = []
+        self.executed_sqls: List[str] = []  # Track SQL queries in execution order
     
     def store(self, key: str, value: Any):
         """Store a value in short-term memory"""
@@ -45,6 +46,10 @@ class ShortTermMemory:
             "tools_used": tools_used or [],
             "timestamp": threading.current_thread().getName()  # Simple timestamp
         })
+    
+    def add_executed_sql(self, sql_query: str):
+        """Add an executed SQL query to the sources list"""
+        self.executed_sqls.append(sql_query)
     
     def get_memory_context(self) -> str:
         """Get formatted memory context for agents"""
@@ -396,13 +401,7 @@ DO NOT assume or invent column names not shown above.
 # Function to prepare planner input
 def prepare_planner_input(state):
     """Prepara el input para el planner incluyendo el contexto del esquema"""
-    planner_input = {
-        "messages": [
-            ("user", f"{state['input']}\n\nSchema Context:\n{state['schema_context']}")
-        ]
-    }
-    
-    return planner_input
+    return state  # El estado ya contiene toda la información necesaria
 
 # Create planner
 planner = planner_prompt | planner_llm.with_structured_output(Plan)
@@ -841,10 +840,15 @@ async def invoke_agent(request: Request):
     
     print(f"✅ Query completed ({len(result.get('response', ''))} chars)")
     
+    # Get SQL sources from memory if available
+    sql_sources = []
+    if result.get("short_term_memory") and hasattr(result["short_term_memory"], "executed_sqls"):
+        sql_sources = result["short_term_memory"].executed_sqls
+    
     return {
         "input": user_query,
-        "schema_context": result.get("schema_context", ""),
         "plan": result.get("plan", []),
         "response": result.get("response", ""),
+        "sources": sql_sources,  # Lista de SQLs ejecutados en orden
         "execution_successful": bool(result.get("response"))
     }

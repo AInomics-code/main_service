@@ -27,6 +27,12 @@ def query_database(query: str, db_type: str = "sqlserver") -> str:
     print(f"   " + "="*50)
     
     try:
+        # Track SQL query in global memory if available
+        from rest.invocation import current_memory
+        if current_memory:
+            current_memory.add_executed_sql(query)
+            print(f"   📝 SQL tracked in sources")
+        
         # Use the simple_db_tool implementation that works correctly
         result = _db_tool._run(query)
         
