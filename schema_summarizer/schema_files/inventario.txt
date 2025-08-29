@@ -1,0 +1,11 @@
+TABLA: inventario
+DESCRIPCIÓN: Esta tabla permite saber saldos de inventario por material y bodega o deposito
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuanto  inventario disponible hay del material Mostaza?
+- Cuales son los productos sin stock?
+
+COLUMNAS:
+- producto_id (nvarchar): ID unico del producto del saldo de inventario
+- deposito_id (nvarchar): ID unico del deposito o bodega del saldo de inventario
+- cantidad (numeric): saldo disponible de inventario

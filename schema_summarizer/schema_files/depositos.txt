@@ -1,23 +1,10 @@
 TABLA: depositos
-DESCRIPCIÓN: Tabla que contiene información de los depósitos o almacenes. Usa esta tabla cuando quieras analizar inventario por depósito o logística de almacenamiento.
-
-REGLAS DE NEGOCIO:
-- Cada depósito tiene un código único
-- Los depósitos pueden estar asociados a gerentes responsables
-- Los depósitos se usan para organizar el inventario
+DESCRIPCIÓN: Esta tabla te permite tener informacion de los depositos como saber el id a partir del nombre. Los depositos son sinonimos de bodegas, el usuario puede referirse a los depositos como bodegas
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
-- Cuantos depósitos existen?
-- Cuales son los depósitos con mayor inventario?
-- Según la inversión en tongas/muebles, ¿cuál PDV es más rentable?
-- Según presupuesto de inversión por cadena, ¿dónde me estoy pasando?
-- ¿Cuál es la tendencia de crecimiento estimada por agencia? ¿Cuál es la cuota estimada en base a esta tendencia?
-- Muéstrame la cantidad de entregas (logística) por mes y agencias
+- Cual es la id del deposito BODEGA SANTIAGO? 
+- Cual es la id de la bodega Central?
 
 COLUMNAS:
-- codigo_de_deposito (nvarchar): Código único del depósito
-- nombre_de_deposito (nvarchar): Nombre del depósito
-- direccion (nvarchar): Dirección del depósito
-- ciudad (nvarchar): Ciudad donde se encuentra el depósito
-- telefono (nvarchar): Teléfono del depósito
-- gerente (nvarchar): Gerente responsable del depósito
+- deposito_id (nvarchar): ID unico del deposito o bodega
+- nombre (nvarchar): Nombre del deposito o bodega

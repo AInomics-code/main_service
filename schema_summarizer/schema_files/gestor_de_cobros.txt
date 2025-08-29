@@ -1,6 +1,0 @@
-TABLA: gestor_de_cobros
-DESCRIPCIÓN: Tabla que contiene información de los gestores de cobros
-
-COLUMNAS:
-- codigo_de_gestor_de_cobros (nvarchar): Código único del gestor de cobros
-- nombre_de_gestor_de_cobros (nvarchar): Nombre del gestor de cobros

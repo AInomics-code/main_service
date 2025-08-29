@@ -1,0 +1,23 @@
+TABLA: transacciones
+DESCRIPCIÓN: Esta tabla te permite tener las ventas y notas a creditos
+
+INSTRUCCIONES:
+- Las columnas de total_neto y total_bruto ya estan precalculadas
+- Para calcular el total neto solamente debes sumar la columna total_neto no necesitas calculos adicionales
+- Para calcular el total bruto solamente debes sumar la columna total_bruto no necesitas calculos adicionales
+- La forma correcta de obtener un producto a partir de esta tabla es inner join productos on transacciones.producto_id = productos.producto_id
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cuales fueron mis ventas brutas del mes de agosto del 2023?
+- Cuales fueron mis ventas netas del 2024?  
+- Cuanto se vendio del producto Ketchup el mes pasado?
+
+COLUMNAS:
+- fecha (nvarchar): Fecha de la transaccion
+- cantidad (numeric): Cantidad del producto vendida
+- precio_unitario (numeric): Precio unitario
+- costo (numeric): Costo que tuvo la transaccion
+- cliente_id (nvarchar): Id unico del cliente
+- producto_id (nvarchar): Id unico del producto
+- total_bruto (numeric): total bruto de la venta. Esta columna ya esta precalculada, usala cuando necesites el total bruto
+- total_neto (numeric): total neto de la venta. Esta columna ya esta precalculada, usala cuando necesites el total neto

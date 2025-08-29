@@ -1,93 +1,12 @@
 TABLA: productos
-DESCRIPCIÓN: Tabla principal de productos del sistema con información completa de precios, costos y características. Usa esta tabla cuando quieras analizar productos, precios, costos o características de inventario.
-
-REGLAS DE NEGOCIO:
-- Solo los productos con estado 'activo' deben considerarse para ventas
-- Los productos con para_la_venta = 'S' están disponibles para la venta
-- Los productos perecederos requieren control especial de fechas de vencimiento
-- Los productos con maneja_lotes = 'S' requieren control de lotes
-- Cuando se necesite saber el codigo de un producto se debe hacer una busqueda fuzzy o por proximidad por el nombre_de_producto y escoger el registro que mas simulitud tenga. Por ejemplo si el usuario busca "sobre de mayonesa" entonces debe buscar resultados como "SOBRE MAYONESA 350G" y continuar sus busquedas por el codigo_de_producto del producto encontrado.
+DESCRIPCIÓN: Esta tabla te permite buscar productos para saber su ID unico y asi poder relacionarlo con otras tablas. Lo mas probable es que el usuario no use busque por el nombre exacto como esta en la tabla por lo cual se debe tomar el mas cercano.
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
-- Cuales son los productos mas caros?
-- Cuantos productos activos tenemos?
-- Cuales son los productos perecederos?
-- ¿Cuántos SKUs tenemos por canal? ¿Y cuántos en total en la compañía?
-- Facilítame el arte de X producto
-- Facilítame el código de barra de X producto
-- Facilítame el precio de X producto en la cadena tal o en el cliente tal
-- ¿Cuánto es la rentabilidad por SKU?
-- Muéstrame el inventario con sus días de determinada familia de productos
-- Cual es el costo del producto?
+- Cual es la ID del producto Salsa de tomate?
 
 COLUMNAS:
-- codigo_de_producto (nvarchar): Código único del producto
-- nombre_de_producto (nvarchar): Nombre del producto
-- unidad_de_medida (nvarchar): Unidad de medida del producto
-- factor_de_inversion (numeric): Factor de inversión del producto
-- tamano (nvarchar): Tamaño del producto
-- codigo_de_barra (nvarchar): Código de barras del producto
-- peso (float): Peso del producto
-- estado (nvarchar): Estado del producto (activo/inactivo)
-- costo (float): Costo del producto
-- codigo_de_clase (nvarchar): Código de la clase del producto
-- codigo_de_tipo (nvarchar): Código del tipo del producto
-- codigo_de_impuesto (nvarchar): Código del impuesto aplicable
-- origen (nvarchar): Origen del producto
-- marca (nvarchar): Marca del producto. Si el usuario quiere filtrar sus propios productos se debe tomar los valores donde esta columa sea igual a "LA DOÑA"
-- fecha_de_creacion (datetime): Fecha de creación del producto
-- modelo (nvarchar): Modelo del producto
-- area (nvarchar): Área del producto
-- perecedero (nvarchar): Indica si el producto es perecedero
-- precio1 (float): Precio 1 del producto
-- precio2 (float): Precio 2 del producto
-- precio3 (float): Precio 3 del producto
-- precio4 (float): Precio 4 del producto
-- precio5 (float): Precio 5 del producto
-- precio6 (float): Precio 6 del producto
-- precio7 (float): Precio 7 del producto
-- precio8 (float): Precio 8 del producto
-- precio9 (float): Precio 9 del producto
-- precio10 (float): Precio 10 del producto
-- precio11 (float): Precio 11 del producto
-- precio12 (float): Precio 12 del producto
-- precio13 (float): Precio 13 del producto
-- precio14 (float): Precio 14 del producto
-- precio15 (float): Precio 15 del producto
-- precio16 (float): Precio 16 del producto
-- precio17 (float): Precio 17 del producto
-- precio18 (float): Precio 18 del producto
-- precio19 (float): Precio 19 del producto
-- precio20 (float): Precio 20 del producto
-- precio21 (float): Precio 21 del producto
-- precio22 (float): Precio 22 del producto
-- precio23 (float): Precio 23 del producto
-- precio24 (float): Precio 24 del producto
-- precio25 (float): Precio 25 del producto
-- precio26 (float): Precio 26 del producto
-- precio27 (float): Precio 27 del producto
-- precio28 (float): Precio 28 del producto
-- precio29 (float): Precio 29 del producto
-- precio30 (float): Precio 30 del producto
-- descuento_1 (numeric): Descuento 1 aplicable
-- descuento_2 (numeric): Descuento 2 aplicable
-- descuento_3 (numeric): Descuento 3 aplicable
-- descuento_4 (numeric): Descuento 4 aplicable
-- descuento_5 (numeric): Descuento 5 aplicable
-- descuento_6 (numeric): Descuento 6 aplicable
-- descuento_7 (numeric): Descuento 7 aplicable
-- descuento_8 (numeric): Descuento 8 aplicable
-- descuento_9 (numeric): Descuento 9 aplicable
-- descuento_10 (numeric): Descuento 10 aplicable
-- para_la_venta (nvarchar): Indica si el producto está disponible para la venta
-- materia_prima (nvarchar): Indica si es materia prima
-- fecha_de_registro_sanitario (date): Fecha del registro sanitario
-- registro_sanitario (nvarchar): Número de registro sanitario
-- kosher (nvarchar): Indica si el producto es kosher
-- codigo_de_grupo_generico (numeric): Código del grupo genérico
-- maneja_lotes (nvarchar): Indica si el producto maneja lotes
-- codigo_de_categoria (nvarchar): Código de la categoría
-- producto_de_enlace (nvarchar): Producto de enlace
-- altura (numeric): Altura del producto
-- ancho (numeric): Ancho del producto
-- largo (numeric): Largo del producto
+- producto_id (nvarchar): ID unico del producto
+- nombre (nvarchar): Nombre del producto
+- estado (nvarchar): estado de disponibilidad o activacion del Producto
+- costo (float): costo del producto
+- marca (nvarchar): marca del producto

@@ -219,14 +219,13 @@ INSTRUCTIONS:
 - Review the short-term memory context above for relevant information from previous steps
 - Use data and analysis from previous steps when available and relevant
 - Provide a comprehensive inventory analysis including:
-  - Current stock levels and backorder status (use realistic simulated numbers)
+  - Current stock levels and backorder status
   - Inventory optimization recommendations with specific metrics
   - Supply chain insights and lead time analysis
   - Cost implications and savings projections
   - Backorder reduction strategies with expected outcomes
 - Build upon previous analysis results when applicable
-
-IMPORTANT: Use realistic simulated inventory data, stock levels, and backorder numbers. Do not mention that the data is simulated - present it as if it were real inventory analysis."""
+"""
     
     response = inventory_llm.invoke([HumanMessage(content=inventory_prompt)])
     
@@ -492,7 +491,7 @@ def create_executor_with_context(state):
         
         # Show a preview of schema context for debugging
         if schema_context:
-            schema_preview = schema_context[:300].replace('\n', ' ')
+            schema_preview = schema_context.replace('\n', ' ')
             print(f"   🗂️ Schema preview: {schema_preview}...")
         else:
             print(f"   ⚠️ WARNING: No schema context available!")
