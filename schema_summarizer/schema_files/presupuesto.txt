@@ -1,0 +1,11 @@
+TABLA: presupuesto
+DESCRIPCIÓN: Esta tabla da informacion del presupuesto por cada cliente mensualmente
+
+EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
+- Cual es el presupuesto del cliente X?
+- Cuanto es el presupuesto de este mes?
+
+COLUMNAS:
+- fecha (date): Fecha de backorder. Este campo es dateonly pero el dato se da mensual
+- presupuesto (real): Presupuesto en dinero del cliente para el mes de fecha
+- cliente_nombre (nvarchar): Nombre del cliente al que se le asigno el presupuesto 

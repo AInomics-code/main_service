@@ -50,8 +50,19 @@ class VectorDBUpdater:
         )
 
     def get_embeddings(self, text):
-        """Obtener embeddings usando Titan v1"""
+        """Obtener embeddings usando OpenAI como alternativa"""
         try:
+            # Fallback a OpenAI si Bedrock no está disponible
+            from openai import OpenAI
+            
+            client = OpenAI(api_key=settings.OPENAI_KEY)
+            response = client.embeddings.create(
+                input=text,
+                model="text-embedding-3-small"
+            )
+            return response.data[0].embedding
+        except ImportError:
+            # Si OpenAI no está disponible, intentar con Bedrock
             import json
             
             # Formato correcto para Titan v1
