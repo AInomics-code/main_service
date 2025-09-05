@@ -11,6 +11,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import StateGraph, END
 from tools.database_tools import query_database
+from tools.product_search_tools import find_product_by_name, get_best_product_id, search_products_batch, check_product_index_status
 from schema_summarizer.schema_summarizer import SchemaSummarizer
 
 import operator
@@ -209,31 +210,66 @@ def inventory_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    inventory_prompt = f"""You are a specialized inventory management agent. Analyze the following query and provide detailed inventory insights with realistic simulated inventory data.
+    inventory_prompt = f"""You are a specialized inventory management agent with access to advanced product search capabilities.
+
+CRITICAL: Users often don't use exact product names. ALWAYS use product search tools before querying inventory data.
 
 {memory_context}
 
 Query: {query}
 
+WORKFLOW FOR PRODUCT QUERIES:
+1. If user mentions products by name/description, FIRST use get_best_product_id() to find the correct producto_id
+2. Then use query_database with the exact producto_id found
+3. Provide detailed inventory analysis with the correct product data
+
+AVAILABLE TOOLS:
+- get_best_product_id: Find correct producto_id for user's product description
+- find_product_by_name: Search products with detailed similarity results
+- query_database: Execute SQL queries with exact producto_id values
+
 INSTRUCTIONS:
 - Review the short-term memory context above for relevant information from previous steps
-- Use data and analysis from previous steps when available and relevant
-- Provide a comprehensive inventory analysis including:
+- ALWAYS search for products by description BEFORE running inventory queries
+- Use exact producto_id values in your SQL queries (never guess names)
+- Provide comprehensive inventory analysis including:
   - Current stock levels and backorder status
   - Inventory optimization recommendations with specific metrics
   - Supply chain insights and lead time analysis
   - Cost implications and savings projections
   - Backorder reduction strategies with expected outcomes
-- Build upon previous analysis results when applicable
+
+EXAMPLE WORKFLOW:
+User: "cuánta mayonesa de 350grs hay en bodega 01?"
+1. Use get_best_product_id("mayonesa de 350grs") → get exact producto_id
+2. Use query_database("SELECT i.cantidad FROM inventario i WHERE i.producto_id = 'FOUND_ID' AND i.deposito_id = 'bodega 01'")
+3. Provide detailed analysis with the correct data
 """
     
-    response = inventory_llm.invoke([HumanMessage(content=inventory_prompt)])
+    # Create an inventory agent executor with access to product search tools
+    inventory_tools = [query_database, find_product_by_name, get_best_product_id, search_products_batch]
+    inventory_agent_executor = create_react_agent(inventory_llm, inventory_tools)
+    
+    # Execute with tools using react agent
+    agent_input = {"messages": [HumanMessage(content=inventory_prompt)]}
+    response = inventory_agent_executor.invoke(agent_input)
+    
+    # Extract the final message from react agent response
+    if 'messages' in response:
+        messages = response['messages']
+        ai_messages = [msg for msg in messages if hasattr(msg, 'content') and hasattr(msg, 'type') and msg.type == 'ai']
+        if ai_messages:
+            final_content = ai_messages[-1].content
+        else:
+            final_content = str(response)
+    else:
+        final_content = str(response)
     
     # Store result in memory if available
     if current_memory:
-        current_memory.store("inventory_analysis_result", response.content)
+        current_memory.store("inventory_analysis_result", final_content)
     
-    return response.content
+    return final_content
 
 @tool
 def field_ops_agent(query: str) -> str:
@@ -510,7 +546,8 @@ def create_executor_with_context(state):
             memory_context = current_memory.get_memory_context()
         
         # Create executor with all tools available
-        tools = [query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate]
+        tools = [query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate, 
+                find_product_by_name, get_best_product_id, search_products_batch, check_product_index_status]
         executor_agent = create_react_agent(executor_llm, tools)
         
         # Enhanced prompt for dynamic tool usage
@@ -531,14 +568,24 @@ AVAILABLE TOOLS:
 - inventory_agent: Inventory management insights
 - field_ops_agent: Field operations analysis
 - calculate: Mathematical calculations
+- find_product_by_name: Search products by description using semantic similarity
+- get_best_product_id: Get the best matching product_id for a product description
+- search_products_batch: Search multiple products at once
+- check_product_index_status: Verify product search index status
 
 EXECUTION INSTRUCTIONS:
 1. ANALYZE the step requirements carefully
-2. If data is needed from database, use query_database with a SQL query you generate dynamically
-3. CRITICAL: Use ONLY the table names and column names shown in the DATABASE SCHEMA CONTEXT above
-4. DO NOT invent or assume column names - use EXACTLY what's provided in the schema context
-5. Use the most appropriate agent tools for analysis after getting data
-6. Build upon previous results stored in memory when available
+2. CRITICAL FOR PRODUCT QUERIES: If user mentions products by name/description, FIRST use find_product_by_name or get_best_product_id to get the correct producto_id
+3. If data is needed from database, use query_database with a SQL query you generate dynamically
+4. Use ONLY the table names and column names shown in the DATABASE SCHEMA CONTEXT above
+5. DO NOT invent or assume column names - use EXACTLY what's provided in the schema context
+6. Use the most appropriate agent tools for analysis after getting data
+7. Build upon previous results stored in memory when available
+
+PRODUCT SEARCH WORKFLOW:
+- User says "mayonesa de 350grs" → use get_best_product_id("mayonesa de 350grs") → get producto_id → use in SQL WHERE producto_id = 'FOUND_ID'
+- User mentions multiple products → use search_products_batch for efficiency
+- Always search for products BEFORE building SQL queries when user mentions product names
 
 SQL GENERATION RULES:
 - Use ONLY tables and columns from the schema context provided above
