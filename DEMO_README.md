@@ -23,8 +23,19 @@ OPENSEARCH_ENDPOINT=demo-endpoint
 ```
 
 ### 4. Run the service
+
+**Option A: Direct Python**
 ```bash
 python -m uvicorn main:app --reload
+```
+
+**Option B: Docker (recommended for production-like demo)**
+```bash
+# Build the image
+docker build -t ai-service-demo .
+
+# Run with your OpenAI key
+docker run -p 8000:8000 -e OPENAI_KEY=your-key-here ai-service-demo
 ```
 
 ## Sample Data Created
