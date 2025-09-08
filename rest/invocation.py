@@ -593,6 +593,11 @@ SQL GENERATION RULES:
 - If you need to join tables, verify the exact column names from the schema context
 - DO NOT use generic names like 'cliente_id' or 'producto_id' - use the exact column names
 
+FORMATTING REQUIREMENTS:
+- ALWAYS include "$" symbol when displaying monetary amounts (e.g., "$1,500" instead of "1500")
+- Use markdown formatting for better readability: **bold**, *italic*, <mark>highlight</mark>, `code`, and other markdown elements
+- Present data in tables, lists, and formatted sections when appropriate
+
 CRITICAL: You MUST use ONLY the table and column names exactly as shown in the DATABASE SCHEMA CONTEXT.
 
 Execute this step now using the most appropriate tools:"""
@@ -722,6 +727,12 @@ Create a comprehensive, well-structured final response that:
 - Provide actionable recommendations
 - Include relevant metrics and analysis
 - End with a clear executive summary
+
+**FORMATTING REQUIREMENTS:**
+- ALWAYS include "$" symbol when displaying monetary amounts (e.g., "$1,500" instead of "1500")
+- Use markdown formatting extensively for better readability: **bold**, *italic*, <mark>highlight</mark>, `code`, and other markdown elements
+- Present data in tables, lists, and well-formatted sections
+- Use headers, bullet points, and emphasis to structure information clearly
 
 **IMPORTANT:**
 - Be comprehensive but concise
