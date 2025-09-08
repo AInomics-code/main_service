@@ -1,27 +1,24 @@
 from langchain_core.tools import tool
-from tools.simple_db_tool import create_database_tool
-from config.settings import settings
+import sqlite3
+import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Create the database tool instance once using the working implementation from master
-_db_tool = create_database_tool(settings.SQLSERVER_URL)
-
 @tool
-def query_database(query: str, db_type: str = "sqlserver") -> str:
+def query_database(query: str, db_type: str = "sqlite") -> str:
     """
-    Ejecuta una consulta SQL en la base de datos especificada usando la implementación funcional de simple_db_tool
+    Ejecuta una consulta SQL en la base de datos SQLite demo
     
     Args:
         query: Consulta SQL a ejecutar
-        db_type: Tipo de base de datos ("sqlserver", "postgres", "mysql")
+        db_type: Tipo de base de datos (solo sqlite para demo)
     
     Returns:
         Resultado de la consulta en formato JSON
     """
     print(f"\n🗄️ QUERY_DATABASE TOOL CALLED")
-    print(f"   Database: {db_type}")
+    print(f"   Database: {db_type} (demo)")
     print(f"   📊 SQL Query:")
     print(f"   {query}")
     print(f"   " + "="*50)
@@ -33,13 +30,47 @@ def query_database(query: str, db_type: str = "sqlserver") -> str:
             current_memory.add_executed_sql(query)
             print(f"   📝 SQL tracked in sources")
         
-        # Use the simple_db_tool implementation that works correctly
-        result = _db_tool._run(query)
+        # Simple SQLite connection for demo
+        conn = sqlite3.connect('demo_database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute(query)
+        
+        # Get column names
+        columns = [description[0] for description in cursor.description] if cursor.description else []
+        
+        # Fetch results
+        rows = cursor.fetchall()
+        
+        # Convert to JSON format similar to the original tool
+        result_rows = []
+        for row in rows:
+            row_dict = {}
+            for i, value in enumerate(row):
+                if i < len(columns):
+                    row_dict[columns[i]] = value
+            result_rows.append(row_dict)
+        
+        conn.close()
+        
+        # Format response
+        response = f"Query executed successfully\nRows returned: {len(result_rows)}\n\n"
+        
+        if result_rows:
+            response += "Sample results:\n"
+            for i, row in enumerate(result_rows[:5], 1):
+                response += f"Row {i}: {json.dumps(row, default=str)}\n"
+            
+            if len(result_rows) > 5:
+                response += f"\n... and {len(result_rows) - 5} more rows"
+        else:
+            response += "No rows returned"
         
         print(f"   ✅ Query executed successfully")
-        print(f"   📈 Result preview: {result[:200]}...")
+        print(f"   📈 Result preview: {response[:200]}...")
         
-        return result
+        return response
+        
     except Exception as e:
         print(f"   ❌ Database query error: {e}")
         logger.error(f"Database query error: {e}")

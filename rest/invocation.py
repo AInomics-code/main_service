@@ -12,7 +12,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import StateGraph, END
 from tools.database_tools import query_database
 from tools.product_search_tools import find_product_by_name, get_best_product_id, search_products_batch, check_product_index_status
-from schema_summarizer.schema_summarizer import SchemaSummarizer
+# Schema summarizer removed - using static schema for demo
 
 import operator
 from typing import Annotated, List, Tuple, Dict, Any
@@ -385,47 +385,63 @@ SCHEMA CONTEXT:
     ]
 )
 
-# Schema summarizer instance
-schema_summarizer = SchemaSummarizer()
+# Static demo database schema
+DEMO_DATABASE_SCHEMA = """
+DATABASE SCHEMA INFORMATION:
 
-# Schema summarizer instance
-schema_summarizer = SchemaSummarizer()
+TABLE: products
+- Description: Contains product catalog with pricing and category information
+- Columns:
+  * product_id (TEXT): Unique product ID (format: PROD_XXX)
+  * name (TEXT): Product name
+  * status (TEXT): Product status (active/inactive)
+  * cost (REAL): Product cost in USD
+  * brand (TEXT): Product brand
+  * category (TEXT): Product category (Dairy, Meat, Beverages, etc.)
+
+TABLE: customers  
+- Description: Customer information with contact details and location
+- Columns:
+  * customer_id (TEXT): Unique customer ID (format: CUST_XXX)
+  * name (TEXT): Customer full name
+  * email (TEXT): Email address
+  * phone (TEXT): Phone number
+  * city (TEXT): City name
+  * state (TEXT): US state code (NY, CA, TX, etc.)
+  * status (TEXT): Customer status (active/inactive)
+
+TABLE: orders
+- Description: Customer orders with status and totals
+- Columns:
+  * order_id (TEXT): Unique order ID (format: ORD_XXXXXX)
+  * customer_id (TEXT): References customers.customer_id
+  * order_date (DATETIME): Order date and time
+  * status (TEXT): Order status (pending, processing, shipped, delivered, cancelled)
+  * total (REAL): Order total amount in USD
+
+RELATIONSHIPS:
+- orders.customer_id → customers.customer_id (Foreign Key)
+
+SAMPLE DATA:
+- 30 products (Hellmanns Mayonnaise, Organic Valley Milk, etc.)
+- 50 customers across US cities
+- 200 orders from the last year
+"""
 
 # Function to get relevant schema
 def get_schema_context(state):
-    """Obtiene el esquema relevante para la consulta del usuario"""
+    """Returns static demo database schema"""
     try:
         query = state["input"]
-        print(f"🔍 Schema: Found {len(schema_summarizer.get_schema_summary(query, top_k=5)['relevant_tables'])} relevant tables")
+        print(f"🔍 Schema: Using static demo schema for query")
         
-        # Disable verbose logging for schema summarizer
-        import logging
-        schema_logger = logging.getLogger('schema_summarizer')
-        original_level = schema_logger.level
-        schema_logger.setLevel(logging.WARNING)
-        
-        schema_summary = schema_summarizer.get_schema_summary(query, top_k=5)
-        
-        # Restore original logging level
-        schema_logger.setLevel(original_level)
-        
-        # Crear contexto del esquema más específico
-        schema_context = f"""DATABASE SCHEMA INFORMATION for query: "{query}"
+        # Use static schema for demo
+        schema_context = f"""{DEMO_DATABASE_SCHEMA}
 
-=== TOP 5 RELEVANT TABLES WITH EXACT COLUMN NAMES ===
-"""
-        
-        for table in schema_summary["relevant_tables"]:
-            schema_context += f"""
-🗂️ TABLE: {table['table_name']} (Relevance: {table['relevance_score']:.3f})
-📋 COLUMNS AND STRUCTURE:
-{table['content'][:800]}
-
-"""
-        
-        schema_context += """
 ⚠️ IMPORTANT: Use ONLY these exact table and column names in your SQL queries.
 DO NOT assume or invent column names not shown above.
+
+Current query: "{query}"
 """
         
         return {"schema_context": schema_context}

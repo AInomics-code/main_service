@@ -21,8 +21,8 @@ async def test_full_agent_flow():
     
     print("🧪 Test del flujo completo del agente\n")
     
-    # Simular request
-    test_query = "cual es la existencia de mayonesa de 350grs en la bodega 01?"
+    # Simulate request
+    test_query = "how many Hellmanns mayonnaise units did we sell last month?"
     
     mock_request = MockRequest({
         "message": test_query

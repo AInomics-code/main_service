@@ -12,11 +12,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from tools.product_search_tools import get_best_product_id
 from tools.database_tools import query_database
 
-def test_mayonesa_search():
-    """Prueba simple: buscar 'mayonesa 350' y verificar con SQL"""
+def test_mayonnaise_search():
+    """Simple test: search for 'mayonnaise' and verify with SQL"""
     
-    # Búsqueda semántica
-    search_query = "mayonesa 350gr"
+    # Semantic search
+    search_query = "mayonnaise 12oz"
     
     try:
         # Obtener el producto_id usando búsqueda semántica
@@ -30,11 +30,11 @@ def test_mayonesa_search():
             # Extraer el ID de la advertencia
             producto_id = producto_id.split(": ")[1].split(" ")[0]
         
-        # Verificar con consulta SQL
-        sql_query = f"SELECT nombre FROM productos WHERE producto_id = '{producto_id}'"
+        # Verify with SQL query
+        sql_query = f"SELECT name FROM products WHERE product_id = '{producto_id}'"
         result = query_database.invoke({
             "query": sql_query,
-            "db_type": "sqlserver"
+            "db_type": "sqlite"
         })
         
         # Extraer nombre del producto del resultado
@@ -48,18 +48,18 @@ def test_mayonesa_search():
                     if "Row 1:" in line:
                         json_part = line.split('Row 1: ')[1]
                         data = json.loads(json_part)
-                        nombre_real = data.get('nombre', 'No encontrado')
+                        nombre_real = data.get('name', 'Not found')
                         break
             except:
                 nombre_real = "Error parseando resultado"
         
-        # Salida simple
-        print(f"Pregunta usuario: {search_query}")
-        print(f"ID producto: {producto_id}")
-        print(f"Nombre real: {nombre_real}")
+        # Simple output
+        print(f"User query: {search_query}")
+        print(f"Product ID: {producto_id}")
+        print(f"Real name: {nombre_real}")
         
     except Exception as e:
         print(f"Error: {e}")
 
 if __name__ == "__main__":
-    test_mayonesa_search()
+    test_mayonnaise_search()

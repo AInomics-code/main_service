@@ -125,6 +125,8 @@ class SimpleDatabaseTool(BaseTool):
                 return self._get_mysql_schema(engine)
             elif "postgresql" in connection_string.lower() or "postgres" in connection_string.lower():
                 return self._get_postgresql_schema(engine)
+            elif "sqlite" in connection_string.lower():
+                return self._get_sqlite_schema(engine)
             else:
                 return "Database type not recognized"
                 
@@ -215,6 +217,26 @@ class SimpleDatabaseTool(BaseTool):
             schema_info += f"  {column_name}: {data_type} ({nullable})\n"
         
         return schema_info
+
+    def _get_sqlite_schema(self, engine) -> str:
+        """Get SQLite schema"""
+        query = """
+        SELECT 
+            m.name as table_name,
+            p.name as column_name,
+            p.type as data_type,
+            CASE WHEN p.'notnull' = 0 THEN 'YES' ELSE 'NO' END as is_nullable,
+            NULL as character_maximum_length
+        FROM sqlite_master m
+        JOIN pragma_table_info(m.name) p
+        WHERE m.type = 'table' AND m.name NOT LIKE 'sqlite_%'
+        ORDER BY m.name, p.cid
+        """
+        
+        result = self._execute_query(query, str(engine.url))
+        if result["success"]:
+            return self._format_schema_result(result["rows"])
+        return f"Error: {result['error']}"
 
 # Tool factory for easy creation
 def create_database_tool(connection_string: str) -> SimpleDatabaseTool:
