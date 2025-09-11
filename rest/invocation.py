@@ -52,31 +52,27 @@ class ShortTermMemory:
         """Add an executed SQL query to the sources list"""
         self.executed_sqls.append(sql_query)
     
-    def get_memory_context(self) -> str:
-        """Get formatted memory context for agents"""
-        context = "=== SHORT-TERM MEMORY CONTEXT ===\n\n"
+    def get_memory_context(self, max_items: int = 2) -> str:
+        """🧠 Get optimized memory context (limited for performance)"""
+        if not self.memory and not self.step_results:
+            return "No previous context.\n"
         
+        context = ""
+        
+        # Only show most recent stored data
         if self.memory:
-            context += "STORED DATA:\n"
-            for key, value in self.memory.items():
-                context += f"- {key}: {str(value)[:200]}...\n"
-            context += "\n"
+            recent_items = list(self.memory.items())[-max_items:]
+            context += "RECENT DATA:\n"
+            for key, value in recent_items:
+                context += f"- {key}: {str(value)[:100]}...\n"
         
+        # Only show last 2 step results
         if self.step_results:
-            context += "PREVIOUS STEP RESULTS:\n"
-            for step in self.step_results:
-                context += f"Step {step['step_number']}: {step['step_description']}\n"
-                context += f"Result: {step['result'][:300]}...\n"
-                if step['tools_used']:
-                    context += f"Tools used: {', '.join(step['tools_used'])}\n"
-                context += "\n"
+            recent_steps = self.step_results[-max_items:]
+            context += "PREVIOUS STEPS:\n"
+            for step in recent_steps:
+                context += f"Step {step['step_number']}: {step['result'][:150]}...\n"
         
-        if self.execution_context:
-            context += "EXECUTION CONTEXT:\n"
-            for key, value in self.execution_context.items():
-                context += f"- {key}: {str(value)[:200]}...\n"
-        
-        context += "=== END MEMORY CONTEXT ===\n"
         return context
 
 # Custom tool for mathematical calculations
@@ -102,36 +98,28 @@ def sales_agent(query: str) -> str:
     global current_memory
     from tools.database_tools import query_database
     
-    sales_llm = ChatOpenAI(
-        api_key=settings.OPENAI_KEY,
-        model="gpt-4o-mini",
-        temperature=0.3,
-        verbose=True
-    )
+    sales_llm = llm_pool.agents  # Reuse pooled instance
     
     memory_context = ""
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    sales_prompt = f"""You are a specialized sales agent with access to database queries. Analyze the following query and provide detailed sales insights.
+    sales_prompt = f"""🏢 SALES AGENT - Manufacturing Company Analysis
 
 {memory_context}
 
 Query: {query}
 
-INSTRUCTIONS:
-- Review the short-term memory context above for relevant information from previous steps
-- If you need additional sales data from the database, use the query_database function
-- Use data from previous steps when available and relevant
-- Provide a comprehensive sales analysis including:
-  - Sales performance metrics (use real data when available)
-  - Market insights and trends
-  - Recommendations for improvement
-  - Revenue projections if applicable
-- Build upon previous analysis results when applicable
+CONTEXT: Manufacturing company producing 30 products (bakery, prepared foods, sauces, snacks, beverages) serving distributors/wholesale/retail customers.
 
-DATABASE ACCESS: You can execute SQL queries using query_database(query, "sqlserver") if needed for sales data.
-The system will provide schema context automatically to help you generate appropriate queries."""
+ANALYZE:
+- Sales performance by category/customer type
+- Revenue & profit margins (unit_price vs production_cost)  
+- Customer segmentation insights
+- Product performance & trends
+- Order fulfillment metrics
+
+Use query_database for data from: customer_orders, order_details, customers, products, delivery_details."""
     
     # Create a simple agent that can use database queries
     sales_agent_executor = sales_llm.bind_tools([query_database])
@@ -151,36 +139,29 @@ def finance_agent(query: str) -> str:
     global current_memory
     from tools.database_tools import query_database
     
-    finance_llm = ChatOpenAI(
-        api_key=settings.OPENAI_KEY,
-        model="gpt-4o-mini",
-        temperature=0.1,
-        verbose=True
-    )
+    finance_llm = llm_pool.agents  # Reuse pooled instance
     
     memory_context = ""
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    finance_prompt = f"""You are a specialized finance agent with access to database queries. Analyze the following query and provide detailed financial analysis.
+    finance_prompt = f"""💰 FINANCE AGENT - Manufacturing Financial Analysis
 
 {memory_context}
 
 Query: {query}
 
-INSTRUCTIONS:
-- Review the short-term memory context above for relevant information from previous steps
-- If you need additional financial data from the database, use the query_database function
-- Use data and analysis from previous steps when available and relevant
-- Provide a comprehensive financial analysis including:
-  - Financial calculations with real numbers when available
-  - Cost analysis and impact assessment
-  - Profitability metrics and projections
-  - Financial recommendations with ROI estimates
-- Build upon previous analysis results when applicable
+CONTEXT: Manufacturing with raw materials, production costs, waste tracking, and profitability analysis.
 
-DATABASE ACCESS: You can execute SQL queries using query_database(query, "sqlserver") if needed for financial data.
-The system will provide schema context automatically to help you generate appropriate queries."""
+ANALYZE:
+- Production costs (materials + waste + labor)
+- Product profitability by category
+- Inventory valuation (raw materials + finished goods)
+- Cash flow & payment terms
+- Cost variance (planned vs actual)
+- ROI calculations & supplier costs
+
+Use query_database for data from: products, raw_materials, production_orders, raw_material_consumption, customer_orders, order_details."""
     
     # Create a simple agent that can use database queries
     finance_agent_executor = finance_llm.bind_tools([query_database])
@@ -199,12 +180,7 @@ def inventory_agent(query: str) -> str:
     
     global current_memory
     
-    inventory_llm = ChatOpenAI(
-        api_key=settings.OPENAI_KEY,
-        model="gpt-4o-mini",
-        temperature=0.2,
-        verbose=True
-    )
+    inventory_llm = llm_pool.agents  # Reuse pooled instance
     
     memory_context = ""
     if current_memory:
@@ -278,35 +254,41 @@ def field_ops_agent(query: str) -> str:
     
     global current_memory
     
-    field_ops_llm = ChatOpenAI(
-        api_key=settings.OPENAI_KEY,
-        model="gpt-4o-mini",
-        temperature=0.2,
-        verbose=True
-    )
+    field_ops_llm = llm_pool.agents  # Reuse pooled instance
     
     memory_context = ""
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    field_ops_prompt = f"""You are a specialized field operations agent. Analyze the following query and provide detailed operational insights with realistic simulated operational data.
+    field_ops_prompt = f"""You are a specialized field operations agent for a MANUFACTURING COMPANY. Analyze the following query and provide detailed operational insights for our production-to-distribution operations.
 
 {memory_context}
 
 Query: {query}
 
+MANUFACTURING COMPANY OPERATIONS CONTEXT:
+- We operate 6 specialized warehouses (production, distribution, cold storage, raw materials, quality control)
+- We have 10 delivery routes with assigned vehicles (trucks/vans) and drivers
+- We manage production scheduling across 4 production lines (Line_A through Line_D)
+- Operations include production planning, inventory management, quality control, and distribution logistics
+- We track shipments, delivery performance, warehouse capacity utilization, and route efficiency
+
 INSTRUCTIONS:
 - Review the short-term memory context above for relevant information from previous steps
 - Use data and analysis from previous steps when available and relevant
-- Provide a comprehensive field operations analysis including:
-  - Operational efficiency metrics with realistic numbers
-  - Logistics optimization strategies for backorder reduction
-  - Resource allocation recommendations with cost estimates
-  - Field performance insights and improvement opportunities
-  - Delivery and fulfillment optimization strategies
+- Provide a comprehensive manufacturing operations analysis including:
+  - Production line efficiency and capacity utilization metrics
+  - Warehouse operations optimization (capacity utilization, storage efficiency)
+  - Distribution and logistics performance (route efficiency, delivery success rates)
+  - Inventory flow optimization (raw materials → production → finished goods → customers)
+  - Quality control impact on operations (grade A/B/C distribution, waste reduction)
+  - Supply chain coordination (supplier delivery, production scheduling, customer fulfillment)
+  - Backorder reduction strategies through operational improvements
+  - Cross-functional operational insights (production-warehouse-distribution coordination)
+  - Resource allocation recommendations for production lines, warehouses, and delivery routes
 - Build upon previous analysis results when applicable
 
-IMPORTANT: Use realistic simulated operational data and metrics. Do not mention that the data is simulated - present it as if it were real operational analysis."""
+FOCUS AREAS: Production scheduling, warehouse management, distribution logistics, quality control, and end-to-end supply chain optimization."""
     
     response = field_ops_llm.invoke([HumanMessage(content=field_ops_prompt)])
     
@@ -331,21 +313,44 @@ class Plan(BaseModel):
         description="different steps to follow, should be in sorted order"
     )
 
-# LLM instances
-llm = ChatOpenAI(
-    api_key=settings.OPENAI_KEY,
-    model="gpt-4o-mini",
-    temperature=0.7,
-    max_tokens=1000,
-    verbose=True
-)
+# 🚀 OPTIMIZED LLM Pool - Reusable instances to avoid recreation overhead
+class LLMPool:
+    def __init__(self):
+        # Core instances with optimized settings
+        self.planner = ChatOpenAI(
+            api_key=settings.OPENAI_KEY,
+            model="gpt-4o-mini", 
+            temperature=0,
+            verbose=False  # Reduce logging overhead
+        )
+        
+        self.executor = ChatOpenAI(
+            api_key=settings.OPENAI_KEY,
+            model="gpt-4o-mini",
+            temperature=0.1,
+            verbose=False
+        )
+        
+        self.agents = ChatOpenAI(  # For sales/finance/inventory/field_ops
+            api_key=settings.OPENAI_KEY,
+            model="gpt-4o-mini", 
+            temperature=0.3,
+            verbose=False
+        )
+        
+        self.synthesis = ChatOpenAI(  # For final response
+            api_key=settings.OPENAI_KEY,
+            model="gpt-4o-mini",
+            temperature=0.2,
+            verbose=False
+        )
 
-planner_llm = ChatOpenAI(
-    api_key=settings.OPENAI_KEY,
-    model="gpt-4o-mini",
-    temperature=0,
-    verbose=True
-)
+# Global pool instance
+llm_pool = LLMPool()
+
+# Backward compatibility
+llm = llm_pool.executor
+planner_llm = llm_pool.planner
 
 # Planner prompt
 planner_prompt = ChatPromptTemplate.from_messages(
@@ -387,67 +392,363 @@ SCHEMA CONTEXT:
 
 # Static demo database schema
 DEMO_DATABASE_SCHEMA = """
-DATABASE SCHEMA INFORMATION:
+MANUFACTURING COMPANY DATABASE SCHEMA (2024-2025 Data):
+
+==== RAW MATERIALS & PRODUCTION ====
+TABLE: raw_materials
+- Description: Raw materials used in production with supplier information
+- Columns:
+  * raw_material_id (TEXT): Unique ID (format: RM_XXX)
+  * name (TEXT): Material name (Wheat Flour, Sugar, Cocoa Powder, etc.)
+  * description (TEXT): Material description
+  * unit_measure (TEXT): kg, liter, ton, bag
+  * cost_per_unit (REAL): Cost per unit in USD
+  * supplier_name (TEXT): Supplier company name
+  * supplier_contact (TEXT): Contact email
+  * min_stock_level (INTEGER): Minimum stock threshold
+  * max_stock_level (INTEGER): Maximum stock capacity
 
 TABLE: products
-- Description: Contains product catalog with pricing and category information
+- Description: Manufactured products with costs and pricing
 - Columns:
-  * product_id (TEXT): Unique product ID (format: PROD_XXX)
-  * name (TEXT): Product name
-  * status (TEXT): Product status (active/inactive)
-  * cost (REAL): Product cost in USD
-  * brand (TEXT): Product brand
-  * category (TEXT): Product category (Dairy, Meat, Beverages, etc.)
+  * product_id (TEXT): Unique ID (format: PROD_XXX)
+  * name (TEXT): Product name (Artisan Bread, Chocolate Chip Cookies, etc.)
+  * description (TEXT): Product description
+  * category (TEXT): Bakery, Prepared Foods, Sauces, Snacks, Beverages
+  * unit_price (REAL): Selling price in USD
+  * production_cost (REAL): Cost to produce in USD
+  * unit_measure (TEXT): loaf, dozen, cake, pizza, can, jar, box, etc.
+  * shelf_life_days (INTEGER): Product shelf life in days
+  * is_active (BOOLEAN): 1=active, 0=inactive
 
-TABLE: customers  
-- Description: Customer information with contact details and location
+TABLE: recipes
+- Description: Bill of Materials (BOM) - raw materials needed per product
 - Columns:
-  * customer_id (TEXT): Unique customer ID (format: CUST_XXX)
+  * recipe_id (TEXT): Unique ID (format: RCP_XXXXXX)
+  * product_id (TEXT): References products.product_id
+  * raw_material_id (TEXT): References raw_materials.raw_material_id
+  * quantity_needed (REAL): Amount of raw material needed
+  * waste_percentage (REAL): Expected waste percentage (2-8%)
+  * is_active (BOOLEAN): Recipe status
+
+TABLE: production_orders
+- Description: Orders for manufacturing products
+- Columns:
+  * production_order_id (TEXT): Unique ID (format: PO_XXXXXX)
+  * product_id (TEXT): Product to manufacture
+  * planned_quantity (INTEGER): Quantity to produce
+  * order_date (DATETIME): When order was placed
+  * planned_start_date (DATETIME): Planned production start
+  * planned_end_date (DATETIME): Planned completion
+  * actual_start_date (DATETIME): Actual start (if started)
+  * actual_end_date (DATETIME): Actual completion (if completed)
+  * status (TEXT): planned, in_progress, completed, cancelled
+  * warehouse_id (TEXT): Production warehouse
+  * priority (TEXT): low, normal, high, urgent
+
+TABLE: production_batches
+- Description: Individual production batches with quality data
+- Columns:
+  * batch_id (TEXT): Unique ID (format: BATCH_XXXXXX)
+  * production_order_id (TEXT): References production_orders
+  * batch_number (TEXT): Human-readable batch number
+  * produced_quantity (INTEGER): Actual quantity produced
+  * quality_grade (TEXT): A, B, C quality grades
+  * production_date (DATETIME): When batch was produced
+  * expiry_date (DATETIME): Product expiration date
+  * production_line (TEXT): Line_A, Line_B, Line_C, Line_D
+  * operator_name (TEXT): Production operator
+
+==== CUSTOMERS & ORDERS ====
+TABLE: customers
+- Description: Customer information (distributors, wholesale, retail)
+- Columns:
+  * customer_id (TEXT): Unique ID (format: CUST_XXX)
   * name (TEXT): Customer full name
   * email (TEXT): Email address
   * phone (TEXT): Phone number
+  * address (TEXT): Street address
   * city (TEXT): City name
-  * state (TEXT): US state code (NY, CA, TX, etc.)
-  * status (TEXT): Customer status (active/inactive)
+  * state (TEXT): US state code (FL, TX, CA, etc.)
+  * postal_code (TEXT): ZIP code
+  * customer_type (TEXT): distributor, wholesale, retail
+  * credit_limit (REAL): Credit limit in USD
+  * payment_terms (TEXT): Payment terms (cash, 7 days, 15 days, 30 days)
 
-TABLE: orders
-- Description: Customer orders with status and totals
+TABLE: customer_orders
+- Description: Customer orders with delivery requirements
 - Columns:
-  * order_id (TEXT): Unique order ID (format: ORD_XXXXXX)
+  * order_id (TEXT): Unique ID (format: ORD_XXXXXX)
   * customer_id (TEXT): References customers.customer_id
-  * order_date (DATETIME): Order date and time
-  * status (TEXT): Order status (pending, processing, shipped, delivered, cancelled)
-  * total (REAL): Order total amount in USD
+  * order_date (DATETIME): Order placement date
+  * requested_delivery_date (DATETIME): Customer requested delivery
+  * order_status (TEXT): pending, confirmed, in_production, ready, shipped, delivered
+  * total_amount (REAL): Total order value in USD
+  * payment_method (TEXT): cash, credit_card, bank_transfer, check, credit_terms
+  * sales_rep (TEXT): Sales representative name
+  * special_instructions (TEXT): Special delivery/handling notes
 
-RELATIONSHIPS:
-- orders.customer_id → customers.customer_id (Foreign Key)
+TABLE: order_details
+- Description: Line items for customer orders
+- Columns:
+  * order_id (TEXT): References customer_orders.order_id
+  * product_id (TEXT): References products.product_id
+  * quantity_ordered (INTEGER): Quantity requested
+  * unit_price (REAL): Price per unit
+  * line_total (REAL): Total for this line item
+  * production_priority (TEXT): low, normal, high, urgent
 
-SAMPLE DATA:
-- 30 products (Hellmanns Mayonnaise, Organic Valley Milk, etc.)
-- 50 customers across US cities
-- 200 orders from the last year
+==== INVENTORY & WAREHOUSES ====
+TABLE: warehouses
+- Description: Storage facilities with capacity and management
+- Columns:
+  * warehouse_id (TEXT): Unique ID (format: WH_XXX)
+  * name (TEXT): Warehouse name
+  * address (TEXT): Physical address
+  * city (TEXT): City location
+  * warehouse_type (TEXT): production, distribution, cold_storage, raw_materials, quality_control
+  * max_capacity (INTEGER): Maximum capacity
+  * current_utilization (REAL): Current usage percentage
+  * manager_name (TEXT): Warehouse manager
+
+TABLE: product_inventory
+- Description: Finished product inventory by warehouse and batch
+- Columns:
+  * product_id (TEXT): References products.product_id
+  * warehouse_id (TEXT): References warehouses.warehouse_id
+  * batch_id (TEXT): References production_batches.batch_id
+  * available_quantity (INTEGER): Available for sale
+  * reserved_quantity (INTEGER): Reserved for orders
+  * production_date (DATETIME): When produced
+  * expiry_date (DATETIME): Expiration date
+  * quality_grade (TEXT): A, B, C quality
+  * location_code (TEXT): Physical location in warehouse
+
+TABLE: raw_material_inventory
+- Description: Raw material inventory by warehouse
+- Columns:
+  * raw_material_id (TEXT): References raw_materials.raw_material_id
+  * warehouse_id (TEXT): References warehouses.warehouse_id
+  * available_quantity (INTEGER): Available for production
+  * reserved_quantity (INTEGER): Reserved for production orders
+  * last_received_date (DATETIME): Last delivery date
+  * location_code (TEXT): Physical location code
+
+TABLE: backorders
+- Description: Orders that cannot be fulfilled immediately
+- Columns:
+  * backorder_id (TEXT): Unique ID (format: BO_XXXXXX)
+  * order_id (TEXT): References customer_orders.order_id
+  * product_id (TEXT): References products.product_id
+  * quantity_pending (INTEGER): Quantity still needed
+  * original_due_date (DATETIME): Original promised date
+  * new_promised_date (DATETIME): New promised delivery
+  * priority (TEXT): low, normal, high, urgent
+  * reason (TEXT): out_of_stock, production_delay, quality_issue, raw_material_shortage
+  * warehouse_id (TEXT): Fulfillment warehouse
+
+==== DISTRIBUTION & LOGISTICS ====
+TABLE: routes
+- Description: Delivery routes with vehicle and driver information
+- Columns:
+  * route_id (TEXT): Unique ID (format: RT_XXX)
+  * route_name (TEXT): Route name
+  * description (TEXT): Route description
+  * assigned_vehicle (TEXT): Vehicle ID (TRUCK-XXX, VAN-XXX)
+  * driver_name (TEXT): Driver full name
+  * driver_phone (TEXT): Driver contact number
+  * max_capacity_kg (REAL): Weight capacity in kg
+  * max_capacity_volume (REAL): Volume capacity
+  * coverage_zone (TEXT): Coverage area
+  * is_active (BOOLEAN): Route status
+
+TABLE: shipments
+- Description: Shipment tracking with capacity utilization
+- Columns:
+  * shipment_id (TEXT): Unique ID (format: SHIP_XXXXXX)
+  * route_id (TEXT): References routes.route_id
+  * shipment_date (DATETIME): Shipment date
+  * departure_warehouse_id (TEXT): Origin warehouse
+  * total_weight (REAL): Total shipment weight
+  * total_volume (REAL): Total shipment volume
+  * number_of_orders (INTEGER): Orders in shipment
+  * departure_time (DATETIME): Departure time
+  * estimated_return_time (DATETIME): Expected return
+  * shipment_status (TEXT): loading, in_transit, delivered, returned
+
+TABLE: delivery_details
+- Description: Individual delivery tracking per order
+- Columns:
+  * delivery_id (TEXT): Unique ID (format: DEL_XXXXXX)
+  * shipment_id (TEXT): References shipments.shipment_id
+  * order_id (TEXT): References customer_orders.order_id
+  * delivery_sequence (INTEGER): Order in delivery route
+  * estimated_delivery_time (DATETIME): Estimated delivery
+  * actual_delivery_time (DATETIME): Actual delivery time
+  * delivery_status (TEXT): pending, delivered, failed, rescheduled
+  * customer_signature (TEXT): Delivery confirmation
+  * delivery_notes (TEXT): Delivery notes
+
+==== TRACKING & MOVEMENTS ====
+TABLE: inventory_movements
+- Description: All inventory transactions and movements
+- Columns:
+  * movement_id (TEXT): Unique ID (format: MOV_XXXXXX)
+  * movement_type (TEXT): production, sale, transfer, adjustment
+  * product_id (TEXT): References products.product_id
+  * warehouse_id (TEXT): References warehouses.warehouse_id
+  * batch_id (TEXT): References production_batches.batch_id
+  * quantity (INTEGER): Movement quantity (positive=in, negative=out)
+  * movement_date (DATETIME): Movement timestamp
+  * reference_id (TEXT): Reference to related transaction
+  * notes (TEXT): Movement description
+
+TABLE: raw_material_consumption
+- Description: Raw material usage in production
+- Columns:
+  * consumption_id (TEXT): Unique ID (format: CONS_XXXXXX)
+  * production_order_id (TEXT): References production_orders
+  * raw_material_id (TEXT): References raw_materials
+  * quantity_consumed (REAL): Amount consumed
+  * consumption_date (DATETIME): Consumption date
+  * batch_number (TEXT): Production batch reference
+  * waste_quantity (REAL): Amount wasted
+
+==== KEY RELATIONSHIPS ====
+- recipes.product_id → products.product_id
+- recipes.raw_material_id → raw_materials.raw_material_id
+- production_orders.product_id → products.product_id
+- production_batches.production_order_id → production_orders.production_order_id
+- customer_orders.customer_id → customers.customer_id
+- order_details.order_id → customer_orders.order_id
+- order_details.product_id → products.product_id
+- product_inventory.batch_id → production_batches.batch_id
+- backorders.order_id → customer_orders.order_id
+- shipments.route_id → routes.route_id
+- delivery_details.shipment_id → shipments.shipment_id
+
+==== SAMPLE DATA VOLUMES ====
+- 25 raw materials with supplier info
+- 30 manufactured products across 5 categories
+- 300 production orders (2024-2025)
+- 120 customers (20 distributors, 30 wholesale, 70 retail)
+- 800 customer orders with details
+- 6 specialized warehouses
+- 150 backorder records
+- 10 delivery routes with drivers
+- 200 shipments with tracking
+- 1,500 inventory movement records
 """
+
+# 🚀 OPTIMIZED Query Analysis & Routing
+def analyze_query_complexity(query: str) -> dict:
+    """Determine if query needs planner or can be executed directly"""
+    query_lower = query.lower()
+    
+    # Simple query patterns (direct execution)
+    simple_patterns = [
+        r'cu[aá]ntos?\s+\w+',  # "cuántos productos"
+        r'qu[eé]\s+\w+\s+hay',  # "qué productos hay"  
+        r'lista?\s+(de\s+)?\w+',  # "lista productos"
+        r'mostrar\s+\w+',       # "mostrar clientes"
+        r'total\s+de\s+\w+',    # "total de ventas"
+        r'buscar\s+\w+',        # "buscar producto"
+    ]
+    
+    # Complex analysis indicators (planner execution)
+    complex_keywords = [
+        'analiz', 'estrategi', 'recomend', 'optimiz', 'reduc', 'mejor',
+        'plan', 'forecast', 'trend', 'insight', 'correlat', 'improv',
+        'strategy', 'recommend', 'optimize', 'reduce', 'improve',
+        'backorder', 'performance', 'efficiency'
+    ]
+    
+    import re
+    is_simple = any(re.search(pattern, query_lower) for pattern in simple_patterns)
+    is_complex = any(keyword in query_lower for keyword in complex_keywords)
+    
+    if is_simple and not is_complex:
+        return {"type": "simple", "execution": "direct"}
+    elif len(query.split()) > 15 or is_complex:  # Long queries are complex
+        return {"type": "complex", "execution": "planner"}
+    else:
+        return {"type": "medium", "execution": "simplified_planner"}
+
+def get_focused_schema(query: str) -> str:
+    """Return relevant schema subset based on query keywords"""
+    query_lower = query.lower()
+    
+    # Core tables always included with clear purposes
+    core_schema = """
+TABLE: products - PRODUCT CATALOG: product_id, name, category, unit_price, production_cost, is_active
+TABLE: customers - CUSTOMER INFO: customer_id, name, customer_type, city, state  
+TABLE: customer_orders - CUSTOMER ORDERS: order_id, customer_id, order_date, order_status, total_amount
+TABLE: order_details - ORDER LINE ITEMS: order_id, product_id, quantity_ordered, unit_price, line_total
+"""
+    
+    # Add relevant tables based on keywords
+    extensions = {}
+    
+    if any(word in query_lower for word in ['inventory', 'inventario', 'stock', 'bodega']):
+        extensions['inventory'] = "TABLE: product_inventory - FINISHED GOODS INVENTORY: product_id, warehouse_id, available_quantity, reserved_quantity, batch_id"
+        extensions['warehouses'] = "TABLE: warehouses - STORAGE LOCATIONS: warehouse_id, name, warehouse_type, manager_name"
+    
+    if any(word in query_lower for word in ['backorder', 'pendiente', 'atras']):
+        extensions['backorders'] = "TABLE: backorders - backorder_id, order_id, product_id, quantity_pending, reason"
+    
+    if any(word in query_lower for word in ['production', 'produccion', 'producir', 'produce', 'manufactur', 'fabric']):
+        extensions['production_planning'] = "TABLE: production_orders - PRODUCTION PLANNING: production_order_id, product_id, planned_quantity, status, order_date"
+        extensions['actual_production'] = "TABLE: production_batches - ACTUAL PRODUCTION (USE FOR PRODUCTION REPORTS): batch_id, production_order_id, produced_quantity, production_date, quality_grade"
+        extensions['raw_materials'] = "TABLE: raw_materials - RAW MATERIALS: raw_material_id, name, cost_per_unit, supplier_name"
+    
+    if any(word in query_lower for word in ['delivery', 'entrega', 'route', 'ruta']):
+        extensions['routes'] = "TABLE: routes - route_id, route_name, driver_name"
+        extensions['shipments'] = "TABLE: shipments - shipment_id, route_id, shipment_status"
+    
+    # Build focused schema
+    focused = f"MANUFACTURING SCHEMA (focused):\n{core_schema}"
+    for table_schema in extensions.values():
+        focused += f"\n{table_schema}"
+    
+    focused += f"\n\nQuery: '{query}'\n\n⚠️ CRITICAL RULES:\n"
+    
+    # Add specific production guidance if production tables are included
+    if 'actual_production' in extensions:
+        focused += """
+🎯 PRODUCTION QUERIES:
+- For "cuánta producción" or "production this month" → USE production_batches table with produced_quantity and production_date
+- For "órdenes de producción" or "production planning" → USE production_orders table with planned_quantity and order_date
+- NEVER use production_order_id in date comparisons (it's TEXT, not DATE)
+
+EXAMPLE: Production this month = SELECT SUM(produced_quantity) FROM production_batches WHERE strftime('%Y-%m', production_date) = strftime('%Y-%m', 'now')
+"""
+    
+    focused += "\n⚠️ Use EXACT table/column names shown above."
+    
+    return focused
 
 # Function to get relevant schema
 def get_schema_context(state):
-    """Returns static demo database schema"""
+    """🧠 Smart schema with query analysis and routing"""
     try:
         query = state["input"]
-        print(f"🔍 Schema: Using static demo schema for query")
         
-        # Use static schema for demo
-        schema_context = f"""{DEMO_DATABASE_SCHEMA}
-
-⚠️ IMPORTANT: Use ONLY these exact table and column names in your SQL queries.
-DO NOT assume or invent column names not shown above.
-
-Current query: "{query}"
-"""
+        # Analyze query complexity
+        analysis = analyze_query_complexity(query)
+        print(f"🔍 Query analysis: {analysis['type']} → {analysis['execution']}")
         
-        return {"schema_context": schema_context}
+        # Get focused schema (much smaller)
+        schema_context = get_focused_schema(query)
+        print(f"📋 Schema focused to ~{len(schema_context.split('TABLE:'))} tables")
+        
+        return {
+            "schema_context": schema_context,
+            "query_analysis": analysis,
+            "use_simplified_flow": analysis["execution"] != "planner"
+        }
     except Exception as e:
-        print(f"❌ Error getting schema: {e}")
-        return {"schema_context": f"Error getting schema: {str(e)}"}
+        print(f"❌ Error analyzing query: {e}")
+        return {"schema_context": f"Error: {str(e)}", "query_analysis": {"type": "complex", "execution": "planner"}}
 
 # Function to prepare planner input
 def prepare_planner_input(state):
@@ -549,12 +850,7 @@ def create_executor_with_context(state):
             print(f"   ⚠️ WARNING: No schema context available!")
         
         # Create an executor LLM with access to all tools
-        executor_llm = ChatOpenAI(
-            api_key=settings.OPENAI_KEY,
-            model="gpt-4o-mini",
-            temperature=0.1,
-            verbose=True
-        )
+        executor_llm = llm_pool.executor  # Reuse pooled instance
         
         # Get memory context
         memory_context = ""
@@ -567,56 +863,23 @@ def create_executor_with_context(state):
         executor_agent = create_react_agent(executor_llm, tools)
         
         # Enhanced prompt for dynamic tool usage
-        executor_prompt = f"""You are an intelligent executor that must complete this step by using the appropriate tools.
+        executor_prompt = f"""🤖 STEP EXECUTOR
 
-STEP TO EXECUTE: {step_content}
+STEP: {step_content}
 
-MEMORY CONTEXT:
-{memory_context}
+MEMORY: {memory_context}
 
-DATABASE SCHEMA CONTEXT (USE THESE EXACT TABLE AND COLUMN NAMES):
-{schema_context}
+SCHEMA: {schema_context}
 
-AVAILABLE TOOLS:
-- query_database: Execute ANY SQL query you generate dynamically on the database
-- sales_agent: Sales analysis and insights
-- finance_agent: Financial calculations and analysis  
-- inventory_agent: Inventory management insights
-- field_ops_agent: Field operations analysis
-- calculate: Mathematical calculations
-- find_product_by_name: Search products by description using semantic similarity
-- get_best_product_id: Get the best matching product_id for a product description
-- search_products_batch: Search multiple products at once
-- check_product_index_status: Verify product search index status
+TOOLS: query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate, find_product_by_name, get_best_product_id
 
-EXECUTION INSTRUCTIONS:
-1. ANALYZE the step requirements carefully
-2. CRITICAL FOR PRODUCT QUERIES: If user mentions products by name/description, FIRST use find_product_by_name or get_best_product_id to get the correct producto_id
-3. If data is needed from database, use query_database with a SQL query you generate dynamically
-4. Use ONLY the table names and column names shown in the DATABASE SCHEMA CONTEXT above
-5. DO NOT invent or assume column names - use EXACTLY what's provided in the schema context
-6. Use the most appropriate agent tools for analysis after getting data
-7. Build upon previous results stored in memory when available
+RULES:
+1. For products: use find_product_by_name FIRST → get exact IDs → then query
+2. Use EXACT table/column names from schema
+3. Format money with $ symbol
+4. Use markdown formatting
 
-PRODUCT SEARCH WORKFLOW:
-- User says "mayonesa de 350grs" → use get_best_product_id("mayonesa de 350grs") → get producto_id → use in SQL WHERE producto_id = 'FOUND_ID'
-- User mentions multiple products → use search_products_batch for efficiency
-- Always search for products BEFORE building SQL queries when user mentions product names
-
-SQL GENERATION RULES:
-- Use ONLY tables and columns from the schema context provided above
-- DO NOT assume foreign key relationships - check the schema first
-- If you need to join tables, verify the exact column names from the schema context
-- DO NOT use generic names like 'cliente_id' or 'producto_id' - use the exact column names
-
-FORMATTING REQUIREMENTS:
-- ALWAYS include "$" symbol when displaying monetary amounts (e.g., "$1,500" instead of "1500")
-- Use markdown formatting for better readability: **bold**, *italic*, <mark>highlight</mark>, `code`, and other markdown elements
-- Present data in tables, lists, and formatted sections when appropriate
-
-CRITICAL: You MUST use ONLY the table and column names exactly as shown in the DATABASE SCHEMA CONTEXT.
-
-Execute this step now using the most appropriate tools:"""
+Execute now:"""
         
         try:
             # Execute with tools using react agent
@@ -694,12 +957,7 @@ def generate_final_response(user_query: str, schema_context: str, plan: List[str
     """Genera una respuesta final agregada basada en todos los resultados de los pasos"""
     
     # Create final response with LLM to synthesize all results
-    final_llm = ChatOpenAI(
-        api_key=settings.OPENAI_KEY,
-        model="gpt-4o-mini",
-        temperature=0.2,
-        verbose=True
-    )
+    final_llm = llm_pool.synthesis  # Reuse pooled instance
     
     # Prepare comprehensive context
     step_summary = ""
