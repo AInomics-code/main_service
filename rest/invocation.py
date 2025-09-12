@@ -106,6 +106,9 @@ def sales_agent(query: str) -> str:
     
     sales_prompt = f"""🏢 SALES AGENT - Manufacturing Company Analysis
 
+🎭 DEMO MODE: Actúa como un analista senior de ventas con datos reales de la empresa.
+Proporciona análisis profesionales y detallados como si todos los datos fueran completamente auténticos.
+
 {memory_context}
 
 Query: {query}
@@ -118,8 +121,10 @@ ANALYZE:
 - Customer segmentation insights
 - Product performance & trends
 - Order fulfillment metrics
+- Market opportunities and growth strategies
 
-Use query_database for data from: customer_orders, order_details, customers, products, delivery_details."""
+Use query_database for data from: customer_orders, order_details, customers, products, delivery_details.
+Presenta los resultados con confianza y profesionalismo, incluyendo recomendaciones específicas."""
     
     # Create a simple agent that can use database queries
     sales_agent_executor = sales_llm.bind_tools([query_database])
@@ -147,6 +152,9 @@ def finance_agent(query: str) -> str:
     
     finance_prompt = f"""💰 FINANCE AGENT - Manufacturing Financial Analysis
 
+🎭 DEMO MODE: Actúa como un CFO o analista financiero senior con acceso completo a datos financieros reales.
+Proporciona análisis rigurosos y recomendaciones estratégicas como si fuera una consultoría de primer nivel.
+
 {memory_context}
 
 Query: {query}
@@ -160,8 +168,10 @@ ANALYZE:
 - Cash flow & payment terms
 - Cost variance (planned vs actual)
 - ROI calculations & supplier costs
+- Financial KPIs and performance metrics
 
-Use query_database for data from: products, raw_materials, production_orders, raw_material_consumption, customer_orders, order_details."""
+Use query_database for data from: products, raw_materials, production_orders, raw_material_consumption, customer_orders, order_details.
+Presenta análisis con gráficos conceptuales, proyecciones y recomendaciones financieras específicas."""
     
     # Create a simple agent that can use database queries
     finance_agent_executor = finance_llm.bind_tools([query_database])
@@ -187,6 +197,9 @@ def inventory_agent(query: str) -> str:
         memory_context = current_memory.get_memory_context()
     
     inventory_prompt = f"""You are a specialized inventory management agent with access to advanced product search capabilities.
+
+🎭 DEMO MODE: Actúa como un Director de Supply Chain con 15+ años de experiencia en manufactura.
+Proporciona análisis de inventario de nivel ejecutivo con insights estratégicos y operacionales.
 
 CRITICAL: Users often don't use exact product names. ALWAYS use product search tools before querying inventory data.
 
@@ -214,6 +227,8 @@ INSTRUCTIONS:
   - Supply chain insights and lead time analysis
   - Cost implications and savings projections
   - Backorder reduction strategies with expected outcomes
+  - Risk assessment and mitigation strategies
+  - Performance benchmarking against industry standards
 
 EXAMPLE WORKFLOW:
 User: "cuánta mayonesa de 350grs hay en bodega 01?"
@@ -262,6 +277,9 @@ def field_ops_agent(query: str) -> str:
     
     field_ops_prompt = f"""You are a specialized field operations agent for a MANUFACTURING COMPANY. Analyze the following query and provide detailed operational insights for our production-to-distribution operations.
 
+🎭 DEMO MODE: Actúa como un VP de Operaciones con experiencia en optimización de cadena de suministro.
+Proporciona análisis operacional estratégico con recomendaciones de mejora continua y eficiencia operacional.
+
 {memory_context}
 
 Query: {query}
@@ -286,6 +304,8 @@ INSTRUCTIONS:
   - Backorder reduction strategies through operational improvements
   - Cross-functional operational insights (production-warehouse-distribution coordination)
   - Resource allocation recommendations for production lines, warehouses, and delivery routes
+  - Digital transformation opportunities and automation potential
+  - Lean manufacturing implementation strategies
 - Build upon previous analysis results when applicable
 
 FOCUS AREAS: Production scheduling, warehouse management, distribution logistics, quality control, and end-to-end supply chain optimization."""
