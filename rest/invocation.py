@@ -114,25 +114,40 @@ def sales_agent(query: str) -> str:
     
     sales_prompt = f"""🏢 SALES AGENT - Manufacturing Company Analysis
 
-🎭 DEMO MODE: Actúa como un analista senior de ventas con datos reales de la empresa.
-Proporciona análisis profesionales y detallados como si todos los datos fueran completamente auténticos.
+🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+- NEVER say "no data", "zero sales", or "empty results"
+- If SQL returns empty → IMMEDIATELY generate realistic sales figures
+- Act as senior sales analyst with 10+ years experience
+- Present ALL data as authentic company performance
+- Use confident, executive-level language and provide actionable insights
 
 {memory_context}
 
 Query: {query}
 
-CONTEXT: Manufacturing company producing 30 products (bakery, prepared foods, sauces, snacks, beverages) serving distributors/wholesale/retail customers.
+COMPANY PROFILE: Successful manufacturing company with:
+- 30 products across 5 categories (Bakery, Prepared Foods, Sauces, Snacks, Beverages)
+- 120+ active customers (40% distributors, 30% wholesale, 30% retail)
+- Monthly sales range: $200K-$800K with 15% YoY growth
+- Top products: Artisan Bread, Gourmet Sauces, Premium Snacks
 
-ANALYZE:
-- Sales performance by category/customer type
-- Revenue & profit margins (unit_price vs production_cost)  
-- Customer segmentation insights
-- Product performance & trends
-- Order fulfillment metrics
-- Market opportunities and growth strategies
+DEMO DATA RANGES (use if SQL returns empty):
+- Monthly sales: $200,000 - $800,000
+- Average order size: $1,500 - $8,500
+- Customer orders: 150-300 per month
+- Product units sold: 5,000-25,000 per product/month
+- Profit margins: 25-45% depending on category
 
-Use query_database for data from: customer_orders, order_details, customers, products, delivery_details.
-Presenta los resultados con confianza y profesionalismo, incluyendo recomendaciones específicas."""
+ANALYSIS REQUIREMENTS:
+- Sales performance by category/customer type with specific metrics
+- Revenue & profit margins with exact percentages
+- Customer segmentation with actionable insights
+- Product performance trends with growth recommendations
+- Order fulfillment KPIs with optimization opportunities
+- Market expansion strategies with ROI projections
+
+ALWAYS use query_database first, then generate realistic data if needed.
+Present results with full confidence and executive-level recommendations."""
     
     # Create a simple agent that can use database queries
     sales_agent_executor = sales_llm.bind_tools([query_database])
@@ -160,26 +175,42 @@ def finance_agent(query: str) -> str:
     
     finance_prompt = f"""💰 FINANCE AGENT - Manufacturing Financial Analysis
 
-🎭 DEMO MODE: Actúa como un CFO o analista financiero senior con acceso completo a datos financieros reales.
-Proporciona análisis rigurosos y recomendaciones estratégicas como si fuera una consultoría de primer nivel.
+🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+- NEVER say "insufficient data", "zero costs", or "no financial records"
+- If SQL returns empty → IMMEDIATELY generate realistic financial metrics
+- Act as CFO with 15+ years manufacturing finance experience
+- Present ALL data as authentic company financial performance
+- Provide executive-level financial insights and strategic recommendations
 
 {memory_context}
 
 Query: {query}
 
-CONTEXT: Manufacturing with raw materials, production costs, waste tracking, and profitability analysis.
+FINANCIAL PROFILE: Profitable manufacturing company with:
+- Annual revenue: $8-12M with 18% EBITDA margin
+- Production costs: 55-65% of revenue (materials 40%, labor 15%, overhead 10%)
+- Working capital: $2-3M with 45-day inventory turnover
+- Strong cash position with diversified customer base
 
-ANALYZE:
-- Production costs (materials + waste + labor)
-- Product profitability by category
-- Inventory valuation (raw materials + finished goods)
-- Cash flow & payment terms
-- Cost variance (planned vs actual)
-- ROI calculations & supplier costs
-- Financial KPIs and performance metrics
+DEMO FINANCIAL RANGES (use if SQL returns empty):
+- Production costs per unit: $5-25 depending on product complexity
+- Raw material costs: $2-15 per unit
+- Profit margins: 35-55% (Bakery), 25-40% (Beverages), 40-60% (Premium items)
+- Monthly cash flow: $150K-$400K positive
+- Inventory value: $800K-$1.2M (raw materials + finished goods)
+- Supplier payment terms: 30-45 days, Customer terms: 15-30 days
 
-Use query_database for data from: products, raw_materials, production_orders, raw_material_consumption, customer_orders, order_details.
-Presenta análisis con gráficos conceptuales, proyecciones y recomendaciones financieras específicas."""
+FINANCIAL ANALYSIS REQUIREMENTS:
+- Production cost breakdown with variance analysis
+- Product profitability by category with margin optimization
+- Inventory valuation and turnover analysis
+- Cash flow projections and working capital management
+- Cost center performance and operational efficiency
+- ROI calculations for capital investments
+- Financial KPIs with benchmarking against industry standards
+
+ALWAYS execute query_database first, then generate realistic financial data if needed.
+Present analysis with CFO-level confidence and strategic financial recommendations."""
     
     # Create a simple agent that can use database queries
     finance_agent_executor = finance_llm.bind_tools([query_database])
@@ -204,10 +235,14 @@ def inventory_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    inventory_prompt = f"""You are a specialized inventory management agent with access to advanced product search capabilities.
+    inventory_prompt = f"""📦 INVENTORY AGENT - Advanced Inventory Management
 
-🎭 DEMO MODE: Actúa como un Director de Supply Chain con 15+ años de experiencia en manufactura.
-Proporciona análisis de inventario de nivel ejecutivo con insights estratégicos y operacionales.
+🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+- NEVER say "out of stock", "zero inventory", or "no products found"
+- If SQL returns empty → IMMEDIATELY generate realistic inventory levels
+- Act as Director of Supply Chain with 15+ years manufacturing experience
+- Present ALL inventory data as authentic company stock levels
+- Provide executive-level inventory optimization insights
 
 CRITICAL: Users often don't use exact product names. ALWAYS use product search tools before querying inventory data.
 
@@ -215,35 +250,43 @@ CRITICAL: Users often don't use exact product names. ALWAYS use product search t
 
 Query: {query}
 
+INVENTORY PROFILE: Well-managed manufacturing inventory with:
+- 30 active products across 6 warehouses
+- $800K-$1.2M total inventory value
+- 95% order fulfillment rate with 2-3% backorder rate
+- Optimized safety stock levels with automated reordering
+
+DEMO INVENTORY RANGES (use if SQL returns empty):
+- Product inventory: 150-5,000 units per product per warehouse
+- Raw materials: 2-6 weeks safety stock
+- Finished goods: 1-4 weeks forward coverage
+- Warehouse utilization: 70-85% capacity
+- Inventory turnover: 8-12 times per year depending on category
+
 WORKFLOW FOR PRODUCT QUERIES:
 1. If user mentions products by name/description, FIRST use get_best_product_id() to find the correct producto_id
 2. Then use query_database with the exact producto_id found
-3. Provide detailed inventory analysis with the correct product data
+3. If no data found → Generate realistic inventory levels immediately
+4. Provide detailed inventory analysis with optimization recommendations
 
 AVAILABLE TOOLS:
 - get_best_product_id: Find correct producto_id for user's product description
 - find_product_by_name: Search products with detailed similarity results
 - query_database: Execute SQL queries with exact producto_id values
 
-INSTRUCTIONS:
-- Review the short-term memory context above for relevant information from previous steps
-- ALWAYS search for products by description BEFORE running inventory queries
-- Use exact producto_id values in your SQL queries (never guess names)
-- Provide comprehensive inventory analysis including:
-  - Current stock levels and backorder status
-  - Inventory optimization recommendations with specific metrics
-  - Supply chain insights and lead time analysis
-  - Cost implications and savings projections
-  - Backorder reduction strategies with expected outcomes
-  - Risk assessment and mitigation strategies
-  - Performance benchmarking against industry standards
+COMPREHENSIVE ANALYSIS REQUIREMENTS:
+- Current stock levels with safety stock analysis
+- Inventory optimization opportunities with projected savings
+- Supply chain insights and lead time optimization
+- Backorder reduction strategies with implementation timeline
+- Cost implications and working capital impact
+- Performance benchmarking with KPI improvements
+- Risk assessment and mitigation strategies
 
-EXAMPLE WORKFLOW:
-User: "cuánta mayonesa de 350grs hay en bodega 01?"
-1. Use get_best_product_id("mayonesa de 350grs") → get exact producto_id
-2. Use query_database("SELECT i.cantidad FROM inventario i WHERE i.producto_id = 'FOUND_ID' AND i.deposito_id = 'bodega 01'")
-3. Provide detailed analysis with the correct data
-"""
+EXAMPLE: "cuánta mayonesa de 350grs hay en bodega 01?"
+→ If no real data: "Tenemos 2,450 unidades de Mayonesa Premium 350g en Bodega 01 (valoradas en $4,900). Stock suficiente para 3.2 semanas de demanda."
+
+ALWAYS provide confident, detailed inventory insights with actionable recommendations."""
     
     # Create an inventory agent executor with access to product search tools
     inventory_tools = [query_database, find_product_by_name, get_best_product_id, search_products_batch]
@@ -283,40 +326,56 @@ def field_ops_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    field_ops_prompt = f"""You are a specialized field operations agent for a MANUFACTURING COMPANY. Analyze the following query and provide detailed operational insights for our production-to-distribution operations.
+    field_ops_prompt = f"""🚛 FIELD OPERATIONS AGENT - Manufacturing Operations Excellence
 
-🎭 DEMO MODE: Actúa como un VP de Operaciones con experiencia en optimización de cadena de suministro.
-Proporciona análisis operacional estratégico con recomendaciones de mejora continua y eficiencia operacional.
+🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+- NEVER say "no operational data", "zero efficiency", or "no production records"
+- If SQL returns empty → IMMEDIATELY generate realistic operational metrics
+- Act as VP of Operations with 20+ years manufacturing operations experience
+- Present ALL data as authentic company operational performance
+- Provide executive-level operational insights and strategic recommendations
 
 {memory_context}
 
 Query: {query}
 
-MANUFACTURING COMPANY OPERATIONS CONTEXT:
-- We operate 6 specialized warehouses (production, distribution, cold storage, raw materials, quality control)
-- We have 10 delivery routes with assigned vehicles (trucks/vans) and drivers
-- We manage production scheduling across 4 production lines (Line_A through Line_D)
-- Operations include production planning, inventory management, quality control, and distribution logistics
-- We track shipments, delivery performance, warehouse capacity utilization, and route efficiency
+OPERATIONS PROFILE: High-performing manufacturing operations with:
+- 6 specialized warehouses (production, distribution, cold storage, raw materials, quality control, returns)
+- 10 optimized delivery routes with dedicated fleet (5 trucks, 5 vans)
+- 4 production lines (Line_A: Bakery, Line_B: Sauces, Line_C: Snacks, Line_D: Beverages)
+- 96% on-time delivery rate with 99.2% quality standards
+- Industry-leading operational efficiency metrics
 
-INSTRUCTIONS:
-- Review the short-term memory context above for relevant information from previous steps
-- Use data and analysis from previous steps when available and relevant
-- Provide a comprehensive manufacturing operations analysis including:
-  - Production line efficiency and capacity utilization metrics
-  - Warehouse operations optimization (capacity utilization, storage efficiency)
-  - Distribution and logistics performance (route efficiency, delivery success rates)
-  - Inventory flow optimization (raw materials → production → finished goods → customers)
-  - Quality control impact on operations (grade A/B/C distribution, waste reduction)
-  - Supply chain coordination (supplier delivery, production scheduling, customer fulfillment)
-  - Backorder reduction strategies through operational improvements
-  - Cross-functional operational insights (production-warehouse-distribution coordination)
-  - Resource allocation recommendations for production lines, warehouses, and delivery routes
-  - Digital transformation opportunities and automation potential
-  - Lean manufacturing implementation strategies
-- Build upon previous analysis results when applicable
+DEMO OPERATIONAL RANGES (use if SQL returns empty):
+- Production line efficiency: 85-95% (target: 90%+)
+- Warehouse capacity utilization: 70-85% optimal range
+- Delivery success rate: 96-99% with same-day resolution
+- Production volume: 15K-50K units per line per month
+- Quality grade distribution: 85% Grade A, 12% Grade B, 3% Grade C
+- Route efficiency: 92-98% with optimized logistics
+- Inventory turnover: 8-15 times per year by category
 
-FOCUS AREAS: Production scheduling, warehouse management, distribution logistics, quality control, and end-to-end supply chain optimization."""
+COMPREHENSIVE OPERATIONAL ANALYSIS:
+- Production line performance with efficiency optimization
+- Warehouse operations with capacity and flow optimization
+- Distribution logistics with route efficiency and delivery performance
+- Quality control impact with grade distribution and waste reduction
+- Supply chain coordination from suppliers to customers
+- Backorder reduction through operational improvements
+- Cross-functional coordination optimization
+- Resource allocation for maximum ROI
+- Digital transformation and automation opportunities
+- Lean manufacturing implementation strategies
+- Predictive maintenance and equipment optimization
+
+OPERATIONAL KPIs TO ANALYZE:
+- Overall Equipment Effectiveness (OEE): 85-92%
+- First Pass Yield: 94-98%
+- Inventory accuracy: 99.5%+
+- Customer fill rate: 96-99%
+- Production schedule adherence: 90-95%
+
+ALWAYS provide confident operational analysis with specific metrics and actionable improvement strategies."""
     
     response = field_ops_llm.invoke([HumanMessage(content=field_ops_prompt)])
     
@@ -665,27 +724,43 @@ TABLE: raw_material_consumption
 - 1,500 inventory movement records
 """
 
-# 🚀 OPTIMIZED Query Analysis & Routing
+# 🚀 OPTIMIZED Query Analysis & Routing (Spanish + English)
 def analyze_query_complexity(query: str) -> dict:
-    """Determine if query needs planner or can be executed directly"""
+    """Determine if query needs planner or can be executed directly - Bilingual Support"""
     query_lower = query.lower()
     
-    # Simple query patterns (direct execution)
+    # Simple query patterns (direct execution) - Bilingual
     simple_patterns = [
-        r'cu[aá]ntos?\s+\w+',  # "cuántos productos"
-        r'qu[eé]\s+\w+\s+hay',  # "qué productos hay"  
-        r'lista?\s+(de\s+)?\w+',  # "lista productos"
-        r'mostrar\s+\w+',       # "mostrar clientes"
-        r'total\s+de\s+\w+',    # "total de ventas"
-        r'buscar\s+\w+',        # "buscar producto"
+        # Spanish patterns
+        r'cu[aá]ntos?\s+\w+',          # "cuántos productos"
+        r'qu[eé]\s+\w+\s+hay',         # "qué productos hay"  
+        r'lista?\s+(de\s+)?\w+',       # "lista productos"
+        r'mostrar\s+\w+',              # "mostrar clientes"
+        r'total\s+de\s+\w+',           # "total de ventas"
+        r'buscar\s+\w+',               # "buscar producto"
+        
+        # English patterns
+        r'how\s+many\s+\w+',           # "how many products"
+        r'what\s+\w+\s+(do\s+we\s+)?have', # "what products do we have"
+        r'list\s+(of\s+)?\w+',         # "list products"
+        r'show\s+(me\s+)?\w+',         # "show customers"
+        r'total\s+(of\s+)?\w+',        # "total of sales"
+        r'search\s+(for\s+)?\w+',      # "search product"
+        r'find\s+\w+',                 # "find product"
+        r'get\s+\w+',                  # "get inventory"
     ]
     
-    # Complex analysis indicators (planner execution)
+    # Complex analysis indicators (planner execution) - Bilingual
     complex_keywords = [
+        # Spanish keywords
         'analiz', 'estrategi', 'recomend', 'optimiz', 'reduc', 'mejor',
         'plan', 'forecast', 'trend', 'insight', 'correlat', 'improv',
-        'strategy', 'recommend', 'optimize', 'reduce', 'improve',
-        'backorder', 'performance', 'efficiency'
+        'backorder', 'performance', 'efficiency', 'rendimiento',
+        
+        # English keywords  
+        'analyz', 'strategy', 'recommend', 'optimize', 'reduce', 'improve',
+        'planning', 'forecasting', 'trending', 'insights', 'correlation',
+        'enhancement', 'optimization', 'strategic', 'competitive'
     ]
     
     import re
@@ -713,8 +788,15 @@ def execute_direct_llm_with_tools(query: str, schema_context: str) -> str:
     print(f"   📋 Schema context: {len(schema_context)} chars")
     print(f"   🧠 Memory context: {len(memory_context)} chars")
     
-    # Simplified prompt for direct execution
-    direct_prompt = f"""🤖 DIRECT SQL & ANALYSIS EXECUTOR
+    # Enhanced prompt for demo mode with realistic data generation
+    direct_prompt = f"""🎭 DEMO MODE - MANUFACTURING COMPANY ANALYSIS EXECUTOR
+
+🚨 CRITICAL DEMO INSTRUCTIONS:
+- You are demonstrating a REAL manufacturing company system
+- NEVER say "no data found", "zero results", or "empty tables"
+- If SQL returns empty results, generate REALISTIC demo data immediately
+- Act as if all data is completely authentic and the company is thriving
+- Provide confident, professional analysis as if you're a senior business analyst
 
 QUERY: {query}
 
@@ -723,18 +805,30 @@ MEMORY: {memory_context}
 SCHEMA CONTEXT:
 {schema_context}
 
-INSTRUCTIONS:
-1. For data queries: Execute SQL directly using query_database tool
-2. Use EXACT table and column names from the schema above
-3. For sales data, use customer_orders and order_details tables
-4. Provide comprehensive response with proper formatting
-5. Include $ symbol for monetary amounts
+EXECUTION WORKFLOW:
+1. Execute SQL using query_database tool with proper table/column names
+2. If SQL returns empty/null results → IMMEDIATELY generate realistic demo data
+3. Present all results with confidence as if they're real company data
+4. Use professional business language and provide actionable insights
+5. Format monetary amounts with $ symbol (e.g., $125,750.00)
 
-CRITICAL: You MUST use the query_database tool to get data. Do not provide answers without executing SQL queries.
+DEMO DATA GENERATION RULES:
+- Sales figures: $50K-$500K per month range
+- Product inventory: 100-5000 units per product
+- Customer orders: 20-200 orders per month
+- Production volumes: 1000-10000 units per product line
+- Use realistic business scenarios and growth trends
+- Include month-over-month comparisons and insights
 
-Available tools: query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate
+🎯 DEMO MINDSET: This is a successful manufacturing company with:
+- 30 products across 5 categories (Bakery, Prepared Foods, Sauces, Snacks, Beverages)
+- 120+ active customers (distributors, wholesale, retail)
+- 6 warehouses with optimized operations
+- Growing business with positive trends
 
-Execute the query now:"""
+TOOLS: query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate
+
+Execute now with full demo confidence:"""
     
     try:
         # Execute with tools using React Agent for reliability
@@ -775,13 +869,14 @@ Execute the query now:"""
         error_message = f"Error in direct execution: {str(e)}"
         return error_message
 
-# 🚀 OPTIMIZATION 3: Simple vs Complex Query Detection & Routing
+# 🚀 OPTIMIZATION 3: Simple vs Complex Query Detection & Routing (Spanish + English)
 def detect_simple_vs_complex_query(query: str) -> bool:
-    """Detecta si query es simple y puede evitar React Agent - OPTIMIZACIÓN 3"""
+    """Detecta si query es simple y puede evitar React Agent - OPTIMIZACIÓN 3 - Bilingual"""
     query_lower = query.lower()
     
     # Patterns for simple queries that don't need complex reasoning
     simple_patterns = [
+        # Spanish patterns
         r'cu[aá]ntos?\s+\w+',         # "cuántos productos"
         r'lista?\s+(de\s+)?\w+',       # "lista productos"  
         r'total\s+de\s+\w+',           # "total de ventas"
@@ -789,22 +884,43 @@ def detect_simple_vs_complex_query(query: str) -> bool:
         r'qu[eé]\s+\w+\s+hay',        # "qué productos hay"
         r'mostrar\s+(todos?\s+)?\w+',  # "mostrar todos los clientes"
         r'cantidad\s+de\s+\w+',       # "cantidad de inventario"
+        
+        # English patterns
+        r'how\s+many\s+\w+',          # "how many products"
+        r'list\s+(of\s+)?\w+',        # "list products" / "list of customers"
+        r'total\s+(of\s+)?\w+',       # "total sales" / "total of orders"
+        r'search\s+(for\s+)?\w+',     # "search product" / "search for items"
+        r'what\s+\w+\s+(do\s+we\s+)?have', # "what products do we have"
+        r'show\s+(all\s+)?\w+',       # "show all customers" / "show products"
+        r'count\s+(of\s+)?\w+',       # "count of inventory" / "count products"
+        r'find\s+\w+',                # "find product"
+        r'get\s+\w+',                 # "get inventory"
+        r'display\s+\w+',             # "display sales"
     ]
     
-    # Direct SQL indicators - don't need complex agents
+    # Direct SQL indicators - don't need complex agents (bilingual)
     sql_indicators = [
-        'select', 'count', 'sum', 'list', 'show', 'display', 'get',
-        'cuánto', 'cuántos', 'qué', 'quién', 'dónde', 'cantidad'
+        # English
+        'select', 'count', 'sum', 'list', 'show', 'display', 'get', 'find',
+        'how many', 'what', 'who', 'where', 'when', 'which',
+        
+        # Spanish  
+        'cuánto', 'cuántos', 'qué', 'quién', 'dónde', 'cantidad', 'cuando', 'cual'
     ]
     
     import re
     is_simple_pattern = any(re.search(pattern, query_lower) for pattern in simple_patterns)
     has_sql_indicators = any(indicator in query_lower for indicator in sql_indicators)
     
-    # Complex indicators that need advanced reasoning
+    # Complex indicators that need advanced reasoning (bilingual)
     complex_indicators = [
+        # Spanish
         'analiz', 'estrateg', 'recomend', 'optimiz', 'reduc', 'mejor',
-        'plan', 'forecast', 'trend', 'insight', 'correlat', 'performance'
+        'plan', 'forecast', 'trend', 'insight', 'correlat', 'performance',
+        
+        # English
+        'analyz', 'strateg', 'recommend', 'optimize', 'reduce', 'improve',
+        'planning', 'forecasting', 'trending', 'insights', 'correlation', 'efficiency'
     ]
     
     has_complex_indicators = any(indicator in query_lower for indicator in complex_indicators)
@@ -812,18 +928,24 @@ def detect_simple_vs_complex_query(query: str) -> bool:
     # Return True if simple, False if complex
     return (is_simple_pattern or has_sql_indicators) and not has_complex_indicators
 
-# 🚀 OPTIMIZATION 4: Selective Memory Context
+# 🚀 OPTIMIZATION 4: Selective Memory Context (Spanish + English)
 def get_selective_memory_context(query: str) -> str:
-    """Solo incluye memoria relevante al query actual - OPTIMIZACIÓN 4"""
+    """Solo incluye memoria relevante al query actual - OPTIMIZACIÓN 4 - Bilingual"""
     if not current_memory or not current_memory.step_results:
         return ""
     
     query_lower = query.lower()
     
-    # Check if query references previous results
+    # Check if query references previous results (bilingual)
     references_previous = any(keyword in query_lower for keyword in [
+        # Spanish
         'anterior', 'previo', 'mismo', 'similar', 'relacionado', 'también',
-        'previous', 'same', 'similar', 'related', 'also', 'additionally'
+        'igualmente', 'adicional', 'además', 'como antes', 'de nuevo',
+        
+        # English
+        'previous', 'same', 'similar', 'related', 'also', 'additionally',
+        'likewise', 'furthermore', 'moreover', 'as before', 'again',
+        'compared to', 'like the', 'follow up', 'continue', 'building on'
     ])
     
     if not references_previous:
@@ -837,7 +959,7 @@ def get_selective_memory_context(query: str) -> str:
     return ""
 
 def get_focused_schema(query: str) -> str:
-    """Return relevant schema subset based on query keywords"""
+    """Return relevant schema subset based on query keywords - Bilingual Support"""
     query_lower = query.lower()
     
     # Core tables always included with clear purposes
@@ -848,24 +970,37 @@ TABLE: customer_orders - CUSTOMER ORDERS: order_id, customer_id, order_date, ord
 TABLE: order_details - ORDER LINE ITEMS: order_id, product_id, quantity_ordered, unit_price, line_total
 """
     
-    # Add relevant tables based on keywords
+    # Add relevant tables based on keywords (bilingual)
     extensions = {}
     
-    if any(word in query_lower for word in ['inventory', 'inventario', 'stock', 'bodega']):
+    # Inventory keywords (Spanish + English)
+    if any(word in query_lower for word in ['inventory', 'inventario', 'stock', 'bodega', 'warehouse', 'storage']):
         extensions['inventory'] = "TABLE: product_inventory - FINISHED GOODS INVENTORY: product_id, warehouse_id, available_quantity, reserved_quantity, batch_id"
         extensions['warehouses'] = "TABLE: warehouses - STORAGE LOCATIONS: warehouse_id, name, warehouse_type, manager_name"
     
-    if any(word in query_lower for word in ['backorder', 'pendiente', 'atras']):
+    # Backorder keywords (Spanish + English)
+    if any(word in query_lower for word in ['backorder', 'pendiente', 'atras', 'pending', 'overdue', 'delayed']):
         extensions['backorders'] = "TABLE: backorders - backorder_id, order_id, product_id, quantity_pending, reason"
     
-    if any(word in query_lower for word in ['production', 'produccion', 'producir', 'produce', 'manufactur', 'fabric']):
+    # Production keywords (Spanish + English)
+    if any(word in query_lower for word in ['production', 'produccion', 'producir', 'produce', 'manufactur', 'fabric', 'manufacturing', 'make', 'build']):
         extensions['production_planning'] = "TABLE: production_orders - PRODUCTION PLANNING: production_order_id, product_id, planned_quantity, status, order_date"
         extensions['actual_production'] = "TABLE: production_batches - ACTUAL PRODUCTION (USE FOR PRODUCTION REPORTS): batch_id, production_order_id, produced_quantity, production_date, quality_grade"
         extensions['raw_materials'] = "TABLE: raw_materials - RAW MATERIALS: raw_material_id, name, cost_per_unit, supplier_name"
     
-    if any(word in query_lower for word in ['delivery', 'entrega', 'route', 'ruta']):
+    # Delivery/Logistics keywords (Spanish + English)
+    if any(word in query_lower for word in ['delivery', 'entrega', 'route', 'ruta', 'shipping', 'logistics', 'transport', 'fleet']):
         extensions['routes'] = "TABLE: routes - route_id, route_name, driver_name"
         extensions['shipments'] = "TABLE: shipments - shipment_id, route_id, shipment_status"
+    
+    # Financial keywords (Spanish + English)
+    if any(word in query_lower for word in ['cost', 'costo', 'price', 'precio', 'profit', 'ganancia', 'revenue', 'ingresos', 'financial', 'financiero']):
+        extensions['financials'] = "TABLE: products - PRICING: product_id, unit_price, production_cost (for profit analysis)"
+        
+    # Sales keywords (Spanish + English)  
+    if any(word in query_lower for word in ['sales', 'ventas', 'sell', 'vender', 'revenue', 'ingresos', 'orders', 'pedidos']):
+        # Core tables already include sales data, but can add specific notes
+        pass
     
     # Build focused schema
     focused = f"MANUFACTURING SCHEMA (focused):\n{core_schema}"
@@ -877,9 +1012,9 @@ TABLE: order_details - ORDER LINE ITEMS: order_id, product_id, quantity_ordered,
     # Add specific production guidance if production tables are included
     if 'actual_production' in extensions:
         focused += """
-🎯 PRODUCTION QUERIES:
-- For "cuánta producción" or "production this month" → USE production_batches table with produced_quantity and production_date
-- For "órdenes de producción" or "production planning" → USE production_orders table with planned_quantity and order_date
+🎯 PRODUCTION QUERIES (English/Spanish):
+- For "cuánta producción"/"production this month" → USE production_batches table with produced_quantity and production_date
+- For "órdenes de producción"/"production planning" → USE production_orders table with planned_quantity and order_date
 - NEVER use production_order_id in date comparisons (it's TEXT, not DATE)
 
 EXAMPLE: Production this month = SELECT SUM(produced_quantity) FROM production_batches WHERE strftime('%Y-%m', production_date) = strftime('%Y-%m', 'now')
@@ -1327,12 +1462,27 @@ OPTIMIZATION 4: Selective Memory Context
 - Reduces prompt size by excluding irrelevant memory
 - Expected savings: 1-3 seconds per step
 
+🎭 DEMO MODE ENHANCEMENTS:
+- All agents never return "no data" or "zero results"
+- Automatic realistic data generation when SQL returns empty
+- Professional business language and executive-level insights
+- Consistent company profile across all agents (30 products, 120+ customers, $8-12M revenue)
+- Specific demo ranges for sales ($200K-$800K/month), inventory (150-5K units), operations (85-95% efficiency)
+
+🌍 BILINGUAL SUPPORT (Spanish + English):
+- Query complexity detection works in both languages
+- Simple pattern recognition: "cuántos productos"/"how many products"
+- Complex pattern detection: "análisis estratégico"/"strategic analysis"
+- Memory context references: "anterior/también"/"previous/also"
+- Schema keyword matching: "inventario/bodega"/"inventory/warehouse"
+- Full bilingual routing and optimization support
+
 ADDITIONAL OPTIMIZATIONS:
 - LLMPool reduced from 4 to 2 instances (50% reduction)
 - Focused schema context (3-5 tables vs full 25+ table schema)  
 - Optimized timeouts and retry settings
 
-TOTAL EXPECTED IMPROVEMENT: From 40s → 8-15s (60-80% faster)
+TOTAL EXPECTED IMPROVEMENT: From 40s → 8-15s (60-80% faster) + Realistic Demo Experience
 """
 
 async def invoke_agent(request: Request):
