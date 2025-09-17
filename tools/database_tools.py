@@ -131,28 +131,75 @@ class DemoDataGenerator:
         return data
 
     def _generate_order_data(self, columns: List[str], query: str) -> List[Dict[str, Any]]:
-        """Genera datos de órdenes"""
+        """Genera datos de órdenes REALISTAS para cualquier consulta"""
         data = []
-        base_date = datetime.now() - timedelta(days=30)
         
-        for i in range(8):  # Generar varias órdenes
+        # Determine date range based on query context - FULLY DYNAMIC
+        import re
+        year_match = re.search(r'\b(20\d{2})\b', query.lower())
+        target_year = int(year_match.group(1)) if year_match else datetime.now().year
+        
+        if 'q4' in query.lower():
+            # Q4 of any year
+            base_date = datetime(target_year, 10, 1)
+            date_range = 90  # Q4 is 3 months
+        elif 'q3' in query.lower():
+            base_date = datetime(target_year, 7, 1)
+            date_range = 90
+        elif 'q2' in query.lower():
+            base_date = datetime(target_year, 4, 1)
+            date_range = 90
+        elif 'q1' in query.lower():
+            base_date = datetime(target_year, 1, 1)
+            date_range = 90
+        elif 'daily' in query.lower():
+            # Daily data for target year or recent if current year
+            if target_year == datetime.now().year:
+                base_date = datetime.now() - timedelta(days=15)
+                date_range = 15
+            else:
+                base_date = datetime(target_year, 6, 1)  # Mid year for historical data
+                date_range = 15
+        else:
+            # Default period for target year
+            if target_year == datetime.now().year:
+                base_date = datetime.now() - timedelta(days=30)
+                date_range = 30
+            else:
+                base_date = datetime(target_year, 6, 1)  # Mid year for historical data
+                date_range = 30
+            
+        # Generate realistic number of data points
+        num_records = min(15, max(7, date_range // 3))
+        
+        for i in range(num_records):
             row = {}
-            order_date = base_date + timedelta(days=random.randint(0, 30))
+            # Generate realistic date progression
+            order_date = base_date + timedelta(days=random.randint(0, date_range))
+            
+            # Generate realistic sales figures with variation
+            base_daily_sales = random.uniform(1500, 4500)
+            daily_variation = random.uniform(0.7, 1.4)  # ±40% daily variation
+            daily_sales = round(base_daily_sales * daily_variation, 2)
             
             for col in columns:
                 col_lower = col.lower()
-                if 'order_id' in col_lower:
+                if 'order_date' in col_lower or 'date' in col_lower:
+                    row[col] = order_date.strftime('%Y-%m-%d')
+                elif 'daily_sales' in col_lower or 'total_amount' in col_lower or 'sales' in col_lower:
+                    row[col] = daily_sales
+                elif 'order_id' in col_lower:
                     row[col] = f"ORD_{str(i+1).zfill(6)}"
                 elif 'customer_id' in col_lower:
                     row[col] = random.choice(self.customers)["id"]
                 elif 'product_id' in col_lower:
                     row[col] = random.choice(self.products)["id"]
-                elif 'date' in col_lower:
-                    row[col] = order_date.strftime('%Y-%m-%d')
                 elif 'quantity' in col_lower or 'cantidad' in col_lower:
-                    row[col] = random.randint(10, 100)
+                    # Calculate quantity based on realistic unit price
+                    unit_price = random.uniform(12, 25)
+                    row[col] = int(daily_sales / unit_price)
                 elif 'total' in col_lower or 'amount' in col_lower:
-                    row[col] = round(random.uniform(500, 3000), 2)
+                    row[col] = daily_sales
                 elif 'status' in col_lower or 'estado' in col_lower:
                     row[col] = random.choice(['completed', 'pending', 'shipped'])
                 else:
@@ -249,29 +296,107 @@ class DemoDataGenerator:
         return data
 
     def _generate_sales_data(self, columns: List[str], query: str) -> List[Dict[str, Any]]:
-        """Genera datos de ventas y ingresos"""
+        """Genera datos de ventas y ingresos REALISTAS para cualquier producto"""
         data = []
-        for i, product in enumerate(self.products[:5]):
-            row = {}
-            for col in columns:
-                col_lower = col.lower()
-                if 'product_id' in col_lower:
-                    row[col] = product["id"]
-                elif 'product_name' in col_lower or 'nombre' in col_lower:
-                    row[col] = product["name"]
-                elif 'revenue' in col_lower or 'ingreso' in col_lower or 'total' in col_lower:
-                    row[col] = round(random.uniform(15000, 45000), 2)
-                elif 'quantity' in col_lower or 'cantidad' in col_lower:
-                    row[col] = random.randint(500, 2000)
-                elif 'profit' in col_lower or 'ganancia' in col_lower:
-                    revenue = row.get('revenue', 25000)
-                    row[col] = round(revenue * random.uniform(0.3, 0.5), 2)
-                elif 'category' in col_lower:
-                    row[col] = product["category"]
-                else:
-                    row[col] = self._get_generic_value(col, i)
-            data.append(row)
+        
+        # Determine if query is asking for time-based data (monthly, quarterly, daily)
+        is_time_series = any(word in query.lower() for word in ['month', 'quarter', 'q4', 'daily', 'weekly', 'date'])
+        
+        if is_time_series:
+            # Generate time-based sales data
+            time_periods = self._get_time_periods(query)
+            base_sales = random.uniform(15000, 45000)  # Base monthly sales
+            
+            for i, period in enumerate(time_periods):
+                row = {}
+                # Add some realistic growth/decline patterns
+                growth_factor = random.uniform(0.85, 1.25)  # ±25% variation
+                period_sales = round(base_sales * growth_factor, 2)
+                period_quantity = int(period_sales / random.uniform(12, 25))  # Price between $12-25
+                
+                for col in columns:
+                    col_lower = col.lower()
+                    if 'month' in col_lower or 'date' in col_lower or 'period' in col_lower:
+                        row[col] = period
+                    elif 'total_sales' in col_lower or 'total_amount' in col_lower or 'daily_sales' in col_lower or 'revenue' in col_lower:
+                        row[col] = period_sales
+                    elif 'quantity' in col_lower or 'units' in col_lower:
+                        row[col] = period_quantity
+                    elif 'orders' in col_lower:
+                        row[col] = random.randint(20, 80)
+                    elif 'customer_type' in col_lower or 'type' in col_lower:
+                        row[col] = random.choice(['Distributor', 'Wholesale', 'Retail'])
+                    elif 'total_spent' in col_lower or 'spent' in col_lower:
+                        row[col] = round(period_sales * random.uniform(0.8, 1.2), 2)
+                    elif 'city' in col_lower:
+                        row[col] = random.choice(['Miami', 'Orlando', 'Tampa', 'Jacksonville', 'Austin', 'Dallas'])
+                    elif 'average_price' in col_lower or 'price' in col_lower:
+                        row[col] = round(period_sales / period_quantity, 2)
+                    else:
+                        row[col] = self._get_generic_value(col, i)
+                data.append(row)
+        else:
+            # Standard product sales data
+            for i, product in enumerate(self.products[:7]):
+                row = {}
+                for col in columns:
+                    col_lower = col.lower()
+                    if 'product_id' in col_lower:
+                        row[col] = product["id"]
+                    elif 'product_name' in col_lower or 'nombre' in col_lower:
+                        row[col] = product["name"]
+                    elif 'revenue' in col_lower or 'ingreso' in col_lower or 'total_sales' in col_lower:
+                        row[col] = round(random.uniform(15000, 45000), 2)
+                    elif 'quantity' in col_lower or 'cantidad' in col_lower:
+                        row[col] = random.randint(500, 2000)
+                    elif 'profit' in col_lower or 'ganancia' in col_lower:
+                        revenue = row.get('revenue', 25000)
+                        row[col] = round(revenue * random.uniform(0.3, 0.5), 2)
+                    elif 'category' in col_lower:
+                        row[col] = product["category"]
+                    else:
+                        row[col] = self._get_generic_value(col, i)
+                data.append(row)
         return data
+
+    def _get_time_periods(self, query: str) -> List[str]:
+        """Generate appropriate time periods based on query context - FULLY DYNAMIC"""
+        query_lower = query.lower()
+        
+        # Extract year from query or use current year as default
+        import re
+        year_match = re.search(r'\b(20\d{2})\b', query)
+        target_year = int(year_match.group(1)) if year_match else datetime.now().year
+        
+        if 'q4' in query_lower:
+            # Q4 months for any year
+            return [f'{target_year}-10', f'{target_year}-11', f'{target_year}-12']
+        elif 'q3' in query_lower:
+            return [f'{target_year}-07', f'{target_year}-08', f'{target_year}-09']
+        elif 'q2' in query_lower:
+            return [f'{target_year}-04', f'{target_year}-05', f'{target_year}-06']
+        elif 'q1' in query_lower:
+            return [f'{target_year}-01', f'{target_year}-02', f'{target_year}-03']
+        elif 'daily' in query_lower:
+            # Generate daily dates for requested year or recent if current year
+            if target_year == datetime.now().year:
+                base_date = datetime.now() - timedelta(days=10)
+            else:
+                base_date = datetime(target_year, 1, 15)  # Mid January of target year
+            return [(base_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(10)]
+        elif 'month' in query_lower:
+            # Generate monthly periods for target year
+            months = []
+            for month in range(max(1, target_year == datetime.now().year and datetime.now().month - 4 or 1), 
+                             min(13, target_year == datetime.now().year and datetime.now().month + 2 or 13)):
+                months.append(f'{target_year}-{str(month).zfill(2)}')
+            return months[-5:]  # Last 5 months
+        else:
+            # Default to recent quarters around target year
+            if target_year == datetime.now().year:
+                return [f'Q3 {target_year-1}', f'Q4 {target_year-1}', f'Q1 {target_year}']
+            else:
+                return [f'Q2 {target_year}', f'Q3 {target_year}', f'Q4 {target_year}']
 
     def _generate_generic_data(self, columns: List[str], query: str) -> List[Dict[str, Any]]:
         """Genera datos genéricos cuando no se puede determinar el tipo específico"""
@@ -284,7 +409,7 @@ class DemoDataGenerator:
         return data
 
     def _get_generic_value(self, column_name: str, index: int) -> Any:
-        """Genera un valor genérico basado en el nombre de la columna"""
+        """Genera un valor genérico REALISTA basado en el nombre de la columna"""
         col_lower = column_name.lower()
         
         if 'id' in col_lower:
@@ -303,8 +428,25 @@ class DemoDataGenerator:
             return f"demo{index+1}@empresa.com"
         elif 'phone' in col_lower:
             return f"555-{random.randint(100, 999)}-{random.randint(1000, 9999)}"
+        # 🔧 FIXED: Generate realistic values instead of placeholders
+        elif 'sales' in col_lower or 'revenue' in col_lower or 'amount' in col_lower:
+            return round(random.uniform(12500.00, 45750.00), 2)
+        elif 'total' in col_lower:
+            if 'quantity' in col_lower or 'order' in col_lower:
+                return random.randint(25, 150)
+            else:
+                return round(random.uniform(8500.00, 32500.00), 2)
+        elif 'spent' in col_lower or 'spend' in col_lower:
+            return round(random.uniform(15000.00, 85000.00), 2)
+        elif 'customer_type' in col_lower or 'type' in col_lower:
+            return random.choice(['Distributor', 'Wholesale', 'Retail'])
+        elif 'city' in col_lower or 'ciudad' in col_lower:
+            return random.choice(['Miami', 'Orlando', 'Tampa', 'Jacksonville', 'Austin', 'Dallas', 'Houston'])
+        elif 'orders' in col_lower:
+            return random.randint(15, 85)
         else:
-            return f"Value {index+1}"
+            # Generate realistic numeric values instead of "Value X"
+            return round(random.uniform(1250.50, 8750.99), 2)
 
 # Instancia global del generador
 demo_generator = DemoDataGenerator()

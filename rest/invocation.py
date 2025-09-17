@@ -117,10 +117,12 @@ def sales_agent(query: str) -> str:
 
 🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "no data", "zero sales", or "empty results"
-- If SQL returns empty → IMMEDIATELY generate realistic sales figures
+- If SQL returns empty → IMMEDIATELY generate realistic sales figures with SPECIFIC NUMBERS
+- NEVER use placeholders like "$Value 1", "Figure X" - use actual realistic amounts
 - Act as senior sales analyst with 10+ years experience
-- Present ALL data as authentic company performance
+- Present ALL data as authentic company performance with exact metrics
 - Use confident, executive-level language and provide actionable insights
+- Generate specific amounts: $24,750.00, $31,250.50, 1,850 units, 2,340 units, etc.
 
 {memory_context}
 
@@ -138,6 +140,14 @@ DEMO DATA RANGES (use if SQL returns empty):
 - Customer orders: 150-300 per month
 - Product units sold: 5,000-25,000 per product/month
 - Profit margins: 25-45% depending on category
+
+EXAMPLE Q4 PRODUCT DATA (adapt year to query context):
+- Q4 Month 1 sales: $18,750.00 (1,250 units)
+- Q4 Month 2 sales: $22,340.00 (1,489 units)  
+- Q4 Month 3 sales: $27,890.00 (1,859 units)
+- Weekly patterns: Mon-Wed: 450 units, Thu-Fri: 380 units, Weekend: 220 units
+- Customer breakdown: Distributors 45% ($31,440), Wholesale 35% ($25,480), Retail 20% ($14,560)
+- Avg price per unit: $15.00, Production cost: $8.50, Margin: 43.3%
 
 ANALYSIS REQUIREMENTS:
 - Sales performance by category/customer type with specific metrics
@@ -179,10 +189,12 @@ def finance_agent(query: str) -> str:
 
 🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "insufficient data", "zero costs", or "no financial records"
-- If SQL returns empty → IMMEDIATELY generate realistic financial metrics
+- If SQL returns empty → IMMEDIATELY generate realistic financial metrics with SPECIFIC NUMBERS
+- NEVER use placeholders like "$Amount 1", "Cost X" - use actual realistic figures
 - Act as CFO with 15+ years manufacturing finance experience
-- Present ALL data as authentic company financial performance
+- Present ALL data as authentic company financial performance with exact amounts
 - Provide executive-level financial insights and strategic recommendations
+- Generate specific figures: $145,750.00, $8.50 per unit, 35.5% margin, etc.
 
 {memory_context}
 
@@ -242,10 +254,12 @@ def inventory_agent(query: str) -> str:
 
 🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "out of stock", "zero inventory", or "no products found"
-- If SQL returns empty → IMMEDIATELY generate realistic inventory levels
+- If SQL returns empty → IMMEDIATELY generate realistic inventory levels with SPECIFIC NUMBERS
+- NEVER use placeholders like "Quantity X", "Stock Y" - use actual realistic quantities
 - Act as Director of Supply Chain with 15+ years manufacturing experience
-- Present ALL inventory data as authentic company stock levels
+- Present ALL inventory data as authentic company stock levels with exact counts
 - Provide executive-level inventory optimization insights
+- Generate specific quantities: 2,450 units, 1,850 units, $4,900 value, etc.
 
 CRITICAL: Users often don't use exact product names. ALWAYS use product search tools before querying inventory data.
 
@@ -286,8 +300,8 @@ COMPREHENSIVE ANALYSIS REQUIREMENTS:
 - Performance benchmarking with KPI improvements
 - Risk assessment and mitigation strategies
 
-EXAMPLE: "cuánta mayonesa de 350grs hay en bodega 01?"
-→ If no real data: "Tenemos 2,450 unidades de Mayonesa Premium 350g en Bodega 01 (valoradas en $4,900). Stock suficiente para 3.2 semanas de demanda."
+EXAMPLE: "cuánto inventario hay de [producto] en bodega 01?"
+→ If no real data: "Tenemos 2,450 unidades de [Producto] en Bodega 01 (valoradas en $4,900). Stock suficiente para 3.2 semanas de demanda."
 
 ALWAYS provide confident, detailed inventory insights with actionable recommendations."""
     
@@ -334,10 +348,12 @@ def field_ops_agent(query: str) -> str:
 
 🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "no operational data", "zero efficiency", or "no production records"
-- If SQL returns empty → IMMEDIATELY generate realistic operational metrics
+- If SQL returns empty → IMMEDIATELY generate realistic operational metrics with SPECIFIC NUMBERS
+- NEVER use placeholders like "Metric X", "Efficiency Y" - use actual realistic percentages and quantities
 - Act as VP of Operations with 20+ years manufacturing operations experience
-- Present ALL data as authentic company operational performance
+- Present ALL data as authentic company operational performance with exact KPIs
 - Provide executive-level operational insights and strategic recommendations
+- Generate specific metrics: 92.5% efficiency, 15,750 units produced, 96.8% on-time delivery, etc.
 
 {memory_context}
 
@@ -806,9 +822,13 @@ def execute_direct_llm_with_tools(query: str, schema_context: str) -> str:
 🚨 CRITICAL DEMO INSTRUCTIONS:
 - You are demonstrating a REAL manufacturing company system
 - NEVER say "no data found", "zero results", or "empty tables"
-- If SQL returns empty results, generate REALISTIC demo data immediately
+- If SQL returns empty results, generate REALISTIC demo data with SPECIFIC NUMBERS immediately
+- NEVER use placeholders like "$Value 1", "$Value 2" - use actual realistic numbers
 - Act as if all data is completely authentic and the company is thriving
 - Provide confident, professional analysis as if you're a senior business analyst
+- Use specific monetary amounts: $12,450.00, $8,750.50, etc.
+- Use specific quantities: 1,250 units, 875 units, etc.
+- Create realistic business scenarios with actual performance metrics
 
 QUERY: {query}
 
@@ -818,19 +838,25 @@ SCHEMA CONTEXT:
 {schema_context}
 
 EXECUTION WORKFLOW:
-1. Execute SQL using query_database tool with proper table/column names
-2. If SQL returns empty/null results → IMMEDIATELY generate realistic demo data
+1. Execute ONE comprehensive SQL query using query_database tool - avoid multiple separate queries
+2. If SQL returns empty/null results → IMMEDIATELY generate realistic demo data with SPECIFIC NUMBERS
 3. Present all results with confidence as if they're real company data
 4. Use professional business language and provide actionable insights
 5. Format monetary amounts with $ symbol (e.g., $125,750.00)
 
+🚫 AVOID MULTIPLE QUERIES: Instead of running 4-5 separate queries, create ONE comprehensive analysis
+✅ GOOD: Single query with JOINs, CTEs, or comprehensive analysis
+❌ BAD: Multiple similar queries for the same analysis
+
 DEMO DATA GENERATION RULES:
-- Sales figures: $50K-$500K per month range
-- Product inventory: 100-5000 units per product
-- Customer orders: 20-200 orders per month
-- Production volumes: 1000-10000 units per product line
-- Use realistic business scenarios and growth trends
-- Include month-over-month comparisons and insights
+- Generate SPECIFIC numbers, not placeholders: $287,450.00 not "$Value 1"
+- Sales figures: $50K-$500K per month range with exact amounts
+- Product inventory: 100-5000 units per product with precise counts
+- Customer orders: 20-200 orders per month with exact order numbers
+- Production volumes: 1000-10000 units per product line with specific quantities
+- Use realistic business scenarios and growth trends with actual percentages
+- Include month-over-month comparisons with real percentage changes
+- Q4 PRODUCT EXAMPLE: Month 1: $18,750.00 (1,250 units), Month 2: $22,340.00 (1,489 units), Month 3: $27,890.00 (1,859 units)
 
 🎯 DEMO MINDSET: This is a successful manufacturing company with:
 - 30 products across 5 categories (Bakery, Prepared Foods, Sauces, Snacks, Beverages)
@@ -1480,10 +1506,14 @@ OPTIMIZATION 4: Selective Memory Context
 
 🎭 DEMO MODE ENHANCEMENTS:
 - All agents never return "no data" or "zero results"
-- Automatic realistic data generation when SQL returns empty
+- Automatic realistic data generation with SPECIFIC NUMBERS (no placeholders)
+- NEVER use "$Value 1", "$Amount X" - always use exact figures like "$18,750.00"
 - Professional business language and executive-level insights
 - Consistent company profile across all agents (30 products, 120+ customers, $8-12M revenue)
-- Specific demo ranges for sales ($200K-$800K/month), inventory (150-5K units), operations (85-95% efficiency)
+- Specific demo ranges with exact examples:
+  * Sales: $18,750.00 (any product, any period), $287,450.00 (monthly total)  
+  * Inventory: 2,450 units (any product), $4,900 value
+  * Operations: 92.5% efficiency, 15,750 units produced, 96.8% on-time delivery
 
 🌍 BILINGUAL SUPPORT (Spanish + English):
 - Query complexity detection works in both languages
