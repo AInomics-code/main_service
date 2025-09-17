@@ -106,7 +106,8 @@ def sales_agent(query: str) -> str:
     global current_memory
     from tools.database_tools import query_database
     
-    sales_llm = llm_pool.agents  # Reuse pooled instance
+    # Use extended timeout for sales analysis
+    sales_llm = llm_pool.extended_executor  # 90s timeout
     
     memory_context = ""
     if current_memory:
@@ -167,7 +168,8 @@ def finance_agent(query: str) -> str:
     global current_memory
     from tools.database_tools import query_database
     
-    finance_llm = llm_pool.agents  # Reuse pooled instance
+    # Use extended timeout for financial analysis
+    finance_llm = llm_pool.extended_executor  # 90s timeout
     
     memory_context = ""
     if current_memory:
@@ -229,7 +231,8 @@ def inventory_agent(query: str) -> str:
     
     global current_memory
     
-    inventory_llm = llm_pool.agents  # Reuse pooled instance
+    # Use extended timeout for inventory analysis
+    inventory_llm = llm_pool.extended_executor  # 90s timeout
     
     memory_context = ""
     if current_memory:
@@ -320,7 +323,8 @@ def field_ops_agent(query: str) -> str:
     
     global current_memory
     
-    field_ops_llm = llm_pool.agents  # Reuse pooled instance
+    # Use extended timeout for operations analysis
+    field_ops_llm = llm_pool.extended_executor  # 90s timeout
     
     memory_context = ""
     if current_memory:
@@ -400,34 +404,38 @@ class Plan(BaseModel):
         description="different steps to follow, should be in sorted order"
     )
 
-# 🚀 OPTIMIZED LLM Pool - Reduced instances and optimized settings
+# 🚀 SIMPLIFIED LLM Pool - Just 2 timeout levels
 class LLMPool:
     def __init__(self):
-        # 🚀 OPTIMIZATION: Reduced from 4 to 2 LLM instances (50% reduction)
-        
-        # Primary executor - handles most operations (planning + execution + agents)
-        self.executor = ChatOpenAI(
+        # Fast executor for simple queries (30s timeout)
+        self.fast_executor = ChatOpenAI(
             api_key=settings.OPENAI_KEY,
             model="gpt-4o-mini",
             temperature=0.1,
-            verbose=False,  # Reduce logging overhead
-            max_retries=1,  # Faster failure recovery
-            request_timeout=30  # Prevent hanging requests
-        )
-        
-        # Specialized synthesis - only for final response generation
-        self.synthesis = ChatOpenAI(
-            api_key=settings.OPENAI_KEY,
-            model="gpt-4o-mini",
-            temperature=0.2,
             verbose=False,
             max_retries=1,
-            request_timeout=30
+            request_timeout=30  # Fast timeout for simple queries
+        )
+        
+        # Extended executor for complex analysis (90s timeout)
+        self.extended_executor = ChatOpenAI(
+            api_key=settings.OPENAI_KEY,
+            model="gpt-4o-mini",
+            temperature=0.1,
+            verbose=False,
+            max_retries=1,
+            request_timeout=90  # Extended timeout for complex analysis
         )
         
         # Aliases for backward compatibility
-        self.planner = self.executor  # Reuse executor for planning
-        self.agents = self.executor   # Reuse executor for agents
+        self.executor = self.extended_executor  # Default to extended
+        self.planner = self.extended_executor
+        self.agents = self.extended_executor
+        self.synthesis = self.extended_executor
+    
+    def get_llm(self, is_simple_query: bool = False) -> ChatOpenAI:
+        """Simple selection: fast for simple queries, extended for everything else"""
+        return self.fast_executor if is_simple_query else self.extended_executor
 
 # Global pool instance
 llm_pool = LLMPool()
@@ -779,8 +787,12 @@ def execute_direct_llm_with_tools(query: str, schema_context: str) -> str:
     """Ejecuta query directamente con tools sin planner intermedio - OPTIMIZACIÓN 1"""
     print(f"🚀 DIRECT EXECUTION MODE (Optimization 1)")
     
-    # Use pooled LLM with tools directly - no React Agent overhead
-    direct_llm = llm_pool.executor
+    # 🎯 Simple timeout selection
+    is_simple = detect_simple_vs_complex_query(query)
+    direct_llm = llm_pool.get_llm(is_simple_query=is_simple)
+    
+    timeout = "30s" if is_simple else "90s"
+    print(f"   ⏰ Selected timeout: {timeout} for {'simple' if is_simple else 'complex'} query")
     
     # Get selective memory context (Optimization 4)
     memory_context = get_selective_memory_context(query) if current_memory else ""
@@ -1052,13 +1064,15 @@ def prepare_planner_input(state):
     """Prepara el input para el planner incluyendo el contexto del esquema"""
     return state  # El estado ya contiene toda la información necesaria
 
-# Create planner
-planner = planner_prompt | planner_llm.with_structured_output(Plan)
+# Create planner with extended timeout (90s for complex planning)
+planner = planner_prompt | llm_pool.extended_executor.with_structured_output(Plan)
 
-# Wrapper para el planner con logging
+# Simplified planner wrapper
 def planner_with_logging(planner_input):
-    """Wrapper del planner con logging para debug"""
+    """Wrapper del planner con logging"""
     try:
+        print(f"📋 Using planner with 90s timeout for thorough planning")
+        
         # Ejecutar el planner con el input preparado
         result = planner.invoke(planner_input)
         
@@ -1146,8 +1160,9 @@ def create_executor_with_context(state):
         else:
             print(f"   ⚠️ WARNING: No schema context available!")
         
-        # Create an executor LLM with access to all tools
-        executor_llm = llm_pool.executor  # Reuse pooled instance
+        # Use extended timeout for step execution (90s)
+        executor_llm = llm_pool.extended_executor
+        print(f"   ⏰ Step executor timeout: 90s")
         
         # Get memory context
         memory_context = ""
@@ -1253,8 +1268,9 @@ def generate_final_response(user_query: str, schema_context: str, plan: List[str
                           memory: ShortTermMemory) -> str:
     """Genera una respuesta final agregada basada en todos los resultados de los pasos"""
     
-    # Create final response with LLM to synthesize all results
-    final_llm = llm_pool.synthesis  # Reuse pooled instance
+    # Create final response with extended timeout for synthesis
+    final_llm = llm_pool.extended_executor  # 90s timeout
+    print(f"   🎯 Final synthesis timeout: 90s")
     
     # Prepare comprehensive context
     step_summary = ""
@@ -1480,9 +1496,20 @@ OPTIMIZATION 4: Selective Memory Context
 ADDITIONAL OPTIMIZATIONS:
 - LLMPool reduced from 4 to 2 instances (50% reduction)
 - Focused schema context (3-5 tables vs full 25+ table schema)  
-- Optimized timeouts and retry settings
+- Dynamic timeouts based on query complexity
 
-TOTAL EXPECTED IMPROVEMENT: From 40s → 8-15s (60-80% faster) + Realistic Demo Experience
+🕐 SIMPLIFIED TIMEOUT SYSTEM:
+- Simple queries: 30s timeout (fast execution for basic data retrieval)
+- Complex/analysis queries: 90s timeout (extended time for thorough analysis)
+- All agents and planner: 90s timeout by default for comprehensive analysis
+
+🎯 TIMEOUT BENEFITS:
+- Simple queries remain fast (30s)
+- Complex analysis gets enough time (90s per LLM call)
+- No more timeout failures on strategic analysis
+- Total query time can reach 180-450s for complex multi-step analysis
+
+TOTAL EXPECTED IMPROVEMENT: From 40s → 8-15s (simple) or 15-120s (complex) + Realistic Demo Experience + Extended Analysis Capability
 """
 
 async def invoke_agent(request: Request):
