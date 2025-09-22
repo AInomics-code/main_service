@@ -7,8 +7,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg2 \
     unixodbc-dev \
-    freetds-bin \
-    tdsodbc \
     gcc \
     g++ \
     && rm -rf /var/lib/apt/lists/*
