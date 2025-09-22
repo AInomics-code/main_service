@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     gnupg2 \
     unixodbc-dev \
+    freetds-bin \
+    tdsodbc \
     gcc \
     g++ \
     && rm -rf /var/lib/apt/lists/*
@@ -20,11 +22,6 @@ RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor 
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    freetds-bin \
-    tdsodbc
 
 COPY . /app
 
