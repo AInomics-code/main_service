@@ -133,68 +133,149 @@ PASO 2: [Acción específica y concreta]
 ⏰ TIMELINE TOTAL: X semanas
 """
 
-def generate_external_factors() -> dict:
-    """🌍 Genera factores externos simulados (noticias, mercado, competencia, clima)"""
+def detect_language(text: str) -> str:
+    """Detecta el idioma del texto del usuario"""
+    spanish_indicators = [
+        'cuantos', 'como', 'donde', 'cuando', 'porque', 'que', 'cual', 'quien',
+        'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'y', 'es', 'en',
+        'por', 'para', 'con', 'mi', 'mis', 'tu', 'sus', 'este', 'esta',
+        'tengo', 'tiene', 'hacer', 'debo', 'puedo', 'quiero', 'necesito'
+    ]
+    
+    english_indicators = [
+        'how', 'what', 'where', 'when', 'why', 'who', 'which', 'the', 'a', 'an',
+        'and', 'or', 'is', 'are', 'was', 'were', 'in', 'on', 'at', 'for', 'with',
+        'my', 'your', 'his', 'her', 'this', 'that', 'have', 'has', 'do', 'does',
+        'can', 'could', 'should', 'would', 'will', 'want', 'need', 'get', 'give'
+    ]
+    
+    text_lower = text.lower()
+    spanish_count = sum(1 for indicator in spanish_indicators if indicator in text_lower)
+    english_count = sum(1 for indicator in english_indicators if indicator in text_lower)
+    
+    return 'es' if spanish_count > english_count else 'en'
+
+def generate_external_factors(language: str = 'es') -> dict:
+    """Genera factores externos simulados (noticias, mercado, competencia, clima)"""
     import random
     from datetime import datetime, timedelta
     
-    # Noticias del sector manufacturing/retail/supply chain
-    news_headlines = [
-        "📰 Escasez global de semiconductores afecta producción manufacturera (-15%)",
-        "📰 Aumento en demanda de productos sustentables (+23% YoY)",
-        "📰 Nuevas regulaciones ambientales impactan costos de manufactura",
-        "📰 Guerra comercial afecta cadenas de suministro internacionales",
-        "📰 Boom del e-commerce impulsa demanda de productos de retail (+18%)",
-        "📰 Inflación en materias primas incrementa costos operativos (+12%)",
-        "📰 Automatización industrial reduce costos laborales (-8%)",
-        "📰 Crisis energética europea impacta precios de manufactura"
-    ]
-    
-    # Datos del mercado
-    market_trends = [
-        "📈 Demanda de productos premium aumentó 15% este trimestre",
-        "📉 Precios de materias primas bajaron 8% en el último mes",
-        "📊 Mercado de manufactura creció 6.2% anual",
-        "💹 Inversión en tecnología industrial aumentó 22%",
-        "🏪 Retail físico se recupera (+11%) post-pandemia",
-        "🚚 Costos de logística incrementaron 18% por combustibles",
-        "💰 Márgenes de ganancia promedio del sector: 12.5%",
-        "📱 Digitalización acelera transformación industrial"
-    ]
-    
-    # Análisis de competencia
-    competitor_insights = [
-        "🏆 Competidor líder mantiene 28% market share con innovación",
-        "⚔️ Nueva startup disrumpe mercado con precios 30% menores",
-        "📊 Top 3 competidores controlan 65% del mercado local",
-        "🎯 Competidor principal lanza campaña agresiva de precios",
-        "🚀 Empresa rival anuncia expansión internacional",
-        "📈 Competidor aumentó producción 40% en Q3",
-        "💡 Rival introduce tecnología disruptiva en el mercado",
-        "🤝 Fusión de competidores crea nuevo líder del sector"
-    ]
-    
-    # Factores climáticos
-    weather_impacts = [
-        "🌧️ Lluvias intensas afectan transporte y distribución (-12%)",
-        "☀️ Buen clima impulsa demanda estacional (+8%)",
-        "❄️ Ola de frío incrementa demanda de productos específicos",
-        "🌪️ Huracán en costa este disrumpe cadena de suministro",
-        "🌡️ Temperaturas récord aumentan costos de refrigeración",
-        "🌊 Sequía afecta disponibilidad de materias primas agrícolas",
-        "⛈️ Tormentas causan retrasos en envíos internacionales",
-        "🌿 Temporada favorable para producción agrícola (+14%)"
-    ]
-    
-    return {
-        "news": random.choice(news_headlines),
-        "market": random.choice(market_trends),
-        "competition": random.choice(competitor_insights),
-        "weather": random.choice(weather_impacts),
-        "market_sentiment": random.choice(["🟢 Optimista", "🟡 Neutral", "🔴 Pesimista"]),
-        "supply_chain_status": random.choice(["🟢 Estable", "🟡 Moderado", "🔴 Crítico"]),
-        "economic_indicator": f"📊 Índice manufacturero: {random.randint(45, 65)}/100"
-    }
+    if language == 'es':
+        # Noticias del sector manufacturing/retail/supply chain
+        news_headlines = [
+            "Escasez global de semiconductores afecta producción manufacturera (-15%)",
+            "Aumento en demanda de productos sustentables (+23% YoY)",
+            "Nuevas regulaciones ambientales impactan costos de manufactura",
+            "Guerra comercial afecta cadenas de suministro internacionales",
+            "Boom del e-commerce impulsa demanda de productos de retail (+18%)",
+            "Inflación en materias primas incrementa costos operativos (+12%)",
+            "Automatización industrial reduce costos laborales (-8%)",
+            "Crisis energética europea impacta precios de manufactura"
+        ]
+        
+        # Datos del mercado
+        market_trends = [
+            "Demanda de productos premium aumentó 15% este trimestre",
+            "Precios de materias primas bajaron 8% en el último mes",
+            "Mercado de manufactura creció 6.2% anual",
+            "Inversión en tecnología industrial aumentó 22%",
+            "Retail físico se recupera (+11%) post-pandemia",
+            "Costos de logística incrementaron 18% por combustibles",
+            "Márgenes de ganancia promedio del sector: 12.5%",
+            "Digitalización acelera transformación industrial"
+        ]
+        
+        # Análisis de competencia
+        competitor_insights = [
+            "Competidor líder mantiene 28% market share con innovación",
+            "Nueva startup disrumpe mercado con precios 30% menores",
+            "Top 3 competidores controlan 65% del mercado local",
+            "Competidor principal lanza campaña agresiva de precios",
+            "Empresa rival anuncia expansión internacional",
+            "Competidor aumentó producción 40% en Q3",
+            "Rival introduce tecnología disruptiva en el mercado",
+            "Fusión de competidores crea nuevo líder del sector"
+        ]
+        
+        # Factores climáticos
+        weather_impacts = [
+            "Lluvias intensas afectan transporte y distribución (-12%)",
+            "Buen clima impulsa demanda estacional (+8%)",
+            "Ola de frío incrementa demanda de productos específicos",
+            "Huracán en costa este disrumpe cadena de suministro",
+            "Temperaturas récord aumentan costos de refrigeración",
+            "Sequía afecta disponibilidad de materias primas agrícolas",
+            "Tormentas causan retrasos en envíos internacionales",
+            "Temporada favorable para producción agrícola (+14%)"
+        ]
+        
+        return {
+            "news": random.choice(news_headlines),
+            "market": random.choice(market_trends),
+            "competition": random.choice(competitor_insights),
+            "weather": random.choice(weather_impacts),
+            "market_sentiment": random.choice(["Optimista", "Neutral", "Pesimista"]),
+            "supply_chain_status": random.choice(["Estable", "Moderado", "Crítico"]),
+            "economic_indicator": f"Índice manufacturero: {random.randint(45, 65)}/100"
+        }
+    else:  # English
+        # Industry news manufacturing/retail/supply chain
+        news_headlines = [
+            "Global semiconductor shortage affects manufacturing production (-15%)",
+            "Increase in sustainable product demand (+23% YoY)",
+            "New environmental regulations impact manufacturing costs",
+            "Trade war affects international supply chains",
+            "E-commerce boom drives retail product demand (+18%)",
+            "Raw material inflation increases operational costs (+12%)",
+            "Industrial automation reduces labor costs (-8%)",
+            "European energy crisis impacts manufacturing prices"
+        ]
+        
+        # Market data
+        market_trends = [
+            "Premium product demand increased 15% this quarter",
+            "Raw material prices dropped 8% last month",
+            "Manufacturing market grew 6.2% annually",
+            "Investment in industrial technology increased 22%",
+            "Physical retail recovers (+11%) post-pandemic",
+            "Logistics costs increased 18% due to fuel prices",
+            "Average sector profit margins: 12.5%",
+            "Digitalization accelerates industrial transformation"
+        ]
+        
+        # Competition analysis
+        competitor_insights = [
+            "Leading competitor maintains 28% market share with innovation",
+            "New startup disrupts market with 30% lower prices",
+            "Top 3 competitors control 65% of local market",
+            "Main competitor launches aggressive pricing campaign",
+            "Rival company announces international expansion",
+            "Competitor increased production 40% in Q3",
+            "Rival introduces disruptive technology to market",
+            "Competitor merger creates new sector leader"
+        ]
+        
+        # Weather factors
+        weather_impacts = [
+            "Heavy rain affects transport and distribution (-12%)",
+            "Good weather boosts seasonal demand (+8%)",
+            "Cold wave increases demand for specific products",
+            "Hurricane on east coast disrupts supply chain",
+            "Record temperatures increase refrigeration costs",
+            "Drought affects agricultural raw material availability",
+            "Storms cause delays in international shipments",
+            "Favorable season for agricultural production (+14%)"
+        ]
+        
+        return {
+            "news": random.choice(news_headlines),
+            "market": random.choice(market_trends),
+            "competition": random.choice(competitor_insights),
+            "weather": random.choice(weather_impacts),
+            "market_sentiment": random.choice(["Optimistic", "Neutral", "Pessimistic"]),
+            "supply_chain_status": random.choice(["Stable", "Moderate", "Critical"]),
+            "economic_indicator": f"Manufacturing index: {random.randint(45, 65)}/100"
+        }
 
 # 🚫 TRIGGERS REMOVED: No more hardcoded detection functions
 # The system now ALWAYS applies intelligent analysis with external factors
@@ -229,70 +310,75 @@ def format_aggregate_response(query: str, raw_result: str) -> str:
     
     try:
         # Generate external context factors
-        external_factors = generate_external_factors()
+        user_language = detect_language(query)
+        external_factors = generate_external_factors(user_language)
         
         # 🌍 ALWAYS include root-cause analysis for aggregate responses
         needs_root_cause = True  # Always analyze causes for aggregated data
         
         # Use fast LLM to format the response intelligently
-        formatting_prompt = f"""🎯 ANÁLISIS INTELIGENTE DE DATOS AGREGADOS CON MARKET INTELLIGENCE
+        response_language = "Spanish" if user_language == 'es' else "English"
+        
+        formatting_prompt = f"""INTELLIGENT AGGREGATE DATA ANALYSIS WITH MARKET INTELLIGENCE
 
-PREGUNTA: {query}
-DATOS: {raw_result}
+QUERY: {query}
+DATA: {raw_result}
 
-🌍 CONTEXTO DE MERCADO ACTUAL:
-• **Noticias del sector:** {external_factors['news']}
-• **Tendencia de mercado:** {external_factors['market']}
-• **Panorama competitivo:** {external_factors['competition']}
-• **Factor climático:** {external_factors['weather']}
-• **Sentimiento del mercado:** {external_factors['market_sentiment']}
-• **Estado supply chain:** {external_factors['supply_chain_status']}
+CURRENT MARKET CONTEXT:
+• **Industry news:** {external_factors['news']}
+• **Market trend:** {external_factors['market']}
+• **Competitive landscape:** {external_factors['competition']}
+• **Weather factor:** {external_factors['weather']}
+• **Market sentiment:** {external_factors['market_sentiment']}
+• **Supply chain status:** {external_factors['supply_chain_status']}
 • **{external_factors['economic_indicator']}**
 
-INSTRUCCIONES OBLIGATORIAS:
-1. **RESPUESTA DIRECTA**: Extrae y formatea el número principal naturalmente
-2. **ROOT-CAUSE ANALYSIS**: Identifica 2-3 causas específicas considerando factores externos
-3. **RECOMENDACIONES ESPECÍFICAS**: Incluye productos alternativos/acciones específicas
-4. **MEJORAS CUANTIFICADAS**: Da números específicos de mejora esperada
-5. **ESTRATEGIA DE MERCADO**: Basada en los factores externos mencionados
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
-FORMATO OBLIGATORIO:
-📊 **[Respuesta principal formateada con número]**
+MANDATORY INSTRUCTIONS:
+1. **DIRECT RESPONSE**: Extract and format the main number naturally
+2. **ROOT-CAUSE ANALYSIS**: Identify 2-3 specific causes considering external factors
+3. **SPECIFIC RECOMMENDATIONS**: Include alternative products/specific actions
+4. **QUANTIFIED IMPROVEMENTS**: Give specific improvement numbers expected
+5. **MARKET STRATEGY**: Based on the external factors mentioned
 
-🔍 **Análisis de causas:**
-• **Causa primaria:** [Factor específico basado en market intelligence]
-• **Causa secundaria:** [Factor interno/operacional]
-• **Factor externo:** [Cómo el contexto de mercado contribuye]
+MANDATORY FORMAT (NO EMOJIS):
+**[Main response formatted with number]**
 
-💡 **Recomendaciones específicas:**
-• **Acción inmediata:** [Acción específica con productos/elementos concretos]
-• **Mejora esperada:** [+X% aumento, +$Y adicional, Z semanas timeline]
-• **Estrategia de mercado:** [Acción que aproveche factor externo específico]
+**Cause analysis:**
+• **Primary cause:** [Specific factor based on market intelligence]
+• **Secondary cause:** [Internal/operational factor]
+• **External factor:** [How market context contributes]
 
-🎯 **Plan de acción:**
-1. **Inmediata:** [Acción específica]
-2. **Corto plazo:** [Considerando contexto de mercado]
+**Specific recommendations:**
+• **Immediate action:** [Specific action with concrete products/elements]
+• **Expected improvement:** [+X% increase, +$Y additional, Z weeks timeline]
+• **Market strategy:** [Action that leverages specific external factor]
 
-EJEMPLO:
+**Action plan:**
+1. **Immediate:** [Specific action]
+2. **Short term:** [Considering market context]
+
+EXAMPLE (if responding in Spanish):
 Query: "cuantos sku tengo?"
-Respuesta: 
-📦 **Tienes 32 SKUs disponibles para la venta**
+Response: 
+**Tienes 32 SKUs disponibles para la venta**
 
-🔍 **Análisis de causas:**
+**Análisis de causas:**
 • **Causa primaria:** Optimización de catálogo por costos de almacenamiento elevados
 • **Causa secundaria:** Enfoque en productos de alta rotación para mejorar márgenes
 • **Factor externo:** Crisis energética europea incrementa costos operativos (+12%)
 
-💡 **Recomendaciones específicas:**
+**Recomendaciones específicas:**
 • **Acción inmediata:** Expandir línea de productos sustentables (eco-friendly)
 • **Mejora esperada:** +15% en ventas, +$45,000 adicionales, 8 semanas implementación
 • **Estrategia de mercado:** Aprovechar demanda sustentable (+23% YoY) para diferenciación
 
-🎯 **Plan de acción:**
+**Plan de acción:**
 1. **Inmediata:** Lanzar 3-5 SKUs eco-friendly aprovechando tendencia sustentable
 2. **Corto plazo:** Optimizar supply chain considerando estado crítico actual
 
-Genera análisis completo y específico:"""
+RESPOND IN {response_language}. Generate complete and specific analysis:"""
 
         from langchain_core.messages import HumanMessage
         formatter_llm = llm_pool.fast_executor
@@ -305,21 +391,31 @@ Genera análisis completo y específico:"""
     except Exception as e:
         print(f"   ⚠️ Error formatting aggregate response: {e}")
         
-        # Enhanced fallback with smarter formatting
+        # Enhanced fallback with smarter formatting (no emojis)
         if extracted_value is not None:
-            # Smart fallback based on patterns
-            if any(word in raw_result.lower() for word in ['sku', 'product']):
-                return f"📦 Tienes {int(extracted_value)} SKUs disponibles para la venta"
-            elif any(word in raw_result.lower() for word in ['customer', 'client']):
-                return f"👥 Tienes {int(extracted_value)} clientes registrados"
-            elif any(word in raw_result.lower() for word in ['sales', 'revenue', 'amount']) and extracted_value > 1000:
-                return f"💰 Total: ${extracted_value:,.2f}"
-            else:
-                return f"📊 Resultado: {extracted_value}"
+            # Smart fallback based on patterns and language
+            if user_language == 'es':
+                if any(word in raw_result.lower() for word in ['sku', 'product']):
+                    return f"**Tienes {int(extracted_value)} SKUs disponibles para la venta**"
+                elif any(word in raw_result.lower() for word in ['customer', 'client']):
+                    return f"**Tienes {int(extracted_value)} clientes registrados**"
+                elif any(word in raw_result.lower() for word in ['sales', 'revenue', 'amount']) and extracted_value > 1000:
+                    return f"**Total: ${extracted_value:,.2f}**"
+                else:
+                    return f"**Resultado: {extracted_value}**"
+            else:  # English
+                if any(word in raw_result.lower() for word in ['sku', 'product']):
+                    return f"**You have {int(extracted_value)} SKUs available for sale**"
+                elif any(word in raw_result.lower() for word in ['customer', 'client']):
+                    return f"**You have {int(extracted_value)} registered customers**"
+                elif any(word in raw_result.lower() for word in ['sales', 'revenue', 'amount']) and extracted_value > 1000:
+                    return f"**Total: ${extracted_value:,.2f}**"
+                else:
+                    return f"**Result: {extracted_value}**"
         
         return raw_result  # Ultimate fallback
 
-def execute_tool_calls(response, available_tools):
+def execute_tool_calls(response, available_tools, original_query: str = ""):
     """🔧 Ejecuta las herramientas solicitadas por el LLM con bind_tools y formatea para usuario"""
     print(f"   🔧 Processing tool calls from LLM response...")
     
@@ -381,69 +477,74 @@ def execute_tool_calls(response, available_tools):
     if tool_results:
         # Use the first tool result (usually the most relevant)
         main_result = tool_results[0]
-        original_query = response.content if hasattr(response, 'content') else ""
+        query_for_analysis = original_query or (response.content if hasattr(response, 'content') else "")
         
         # 🌍 ALWAYS INTELLIGENT ANALYSIS: No triggers, always apply smart formatting with external context
         print(f"   🧠 Applying universal intelligent analysis with external factors...")
         
         # Generate external factors for ALL responses
-        external_factors = generate_external_factors()
+        user_language = detect_language(query_for_analysis)
+        external_factors = generate_external_factors(user_language)
         
         # Check if it's a simple aggregate (COUNT, SUM, etc.) - these get lighter formatting
         is_simple_aggregate = (
             any(func in main_result.upper() for func in ['COUNT(', 'SUM(', 'AVG(', 'MAX(', 'MIN(']) or
             any(word in main_result.lower() for word in ['total_', 'count_', 'sum_', 'avg_', 'max_', 'min_']) or
-            any(word in original_query.lower() for word in ['cuantos', 'how many', 'total', 'count'])
+            any(word in query_for_analysis.lower() for word in ['cuantos', 'how many', 'total', 'count'])
         ) and len(main_result) < 300  # Simple if short result
         
         if is_simple_aggregate:
             print(f"   📊 Simple aggregate - applying smart but concise formatting")
-            final_content = format_aggregate_response(original_query, main_result)
+            final_content = format_aggregate_response(query_for_analysis, main_result)
         else:
             # For ALL other queries: Apply FULL intelligent analysis with external factors
             print(f"   🔍 Applying comprehensive analysis with market intelligence")
             
-            formatting_prompt = f"""🎯 ANÁLISIS INTELIGENTE MANUFACTURERO CON MARKET INTELLIGENCE
+            response_language = "Spanish" if user_language == 'es' else "English"
+            
+            formatting_prompt = f"""INTELLIGENT MANUFACTURING ANALYSIS WITH MARKET INTELLIGENCE
 
-PREGUNTA ORIGINAL: {original_query}
-DATOS OBTENIDOS: {main_result}
+ORIGINAL QUESTION: {query_for_analysis}
+DATA OBTAINED: {main_result}
 
-🌍 CONTEXTO DE MERCADO ACTUAL:
-• **Noticias del sector:** {external_factors['news']}
-• **Tendencia de mercado:** {external_factors['market']}  
-• **Panorama competitivo:** {external_factors['competition']}
-• **Factor climático:** {external_factors['weather']}
-• **Sentimiento del mercado:** {external_factors['market_sentiment']}
-• **Estado supply chain:** {external_factors['supply_chain_status']}
+CURRENT MARKET CONTEXT:
+• **Industry news:** {external_factors['news']}
+• **Market trend:** {external_factors['market']}  
+• **Competitive landscape:** {external_factors['competition']}
+• **Weather factor:** {external_factors['weather']}
+• **Market sentiment:** {external_factors['market_sentiment']}
+• **Supply chain status:** {external_factors['supply_chain_status']}
 • **{external_factors['economic_indicator']}**
 
-INSTRUCCIONES OBLIGATORIAS:
-1. **RESPUESTA DIRECTA**: Responde la pregunta específicamente con datos exactos
-2. **ROOT-CAUSE ANALYSIS**: Identifica 2-3 causas específicas del resultado considerando factores externos
-3. **PRODUCTOS ALTERNATIVOS**: Si aplica, sugiere productos específicos con nombres exactos de los datos
-4. **MEJORAS CUANTIFICADAS**: Da números específicos de mejora esperada (%, $, timeline)
-5. **ESTRATEGIA BASADA EN CONTEXTO**: Recomendaciones que aprovechen/mitiguen los factores externos
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
-FORMATO OBLIGATORIO:
-📊 **RESPUESTA PRINCIPAL**
-[Responde la pregunta directamente con datos específicos]
+MANDATORY INSTRUCTIONS:
+1. **DIRECT RESPONSE**: Answer the question specifically with exact data
+2. **CAUSE ANALYSIS**: Identify 2-3 specific causes of the result considering external factors
+3. **ALTERNATIVE PRODUCTS**: If applicable, suggest specific products with exact names from the data
+4. **QUANTIFIED IMPROVEMENTS**: Give specific expected improvement numbers (%, $, timeline)
+5. **CONTEXT-BASED STRATEGY**: Recommendations that leverage/mitigate external factors
 
-🔍 **ANÁLISIS DE CAUSAS** 
-• **Causa primaria:** [Factor interno/externo específico basado en contexto]
-• **Causa secundaria:** [Factor relacionado con market intelligence]
-• **Factor de mercado:** [Cómo el contexto externo contribuye al resultado]
+MANDATORY FORMAT (NO EMOJIS):
+**MAIN RESPONSE**
+[Answer the question directly with specific data]
 
-💡 **RECOMENDACIONES ESPECÍFICAS**
-• **Productos alternativos:** [Nombres específicos de productos de los datos con razón]
-• **Mejora esperada:** [Número específico: X% aumento, $Y adicional, Z semanas timeline]
-• **Estrategia de mercado:** [Acción que aproveche/mitigue factores externos específicos]
+**CAUSE ANALYSIS** 
+• **Primary cause:** [Internal/external specific factor based on context]
+• **Secondary cause:** [Factor related to market intelligence]
+• **Market factor:** [How external context contributes to the result]
 
-🎯 **PLAN DE ACCIÓN**
-1. [Acción específica inmediata con timeline]
-2. [Acción que considere competencia/mercado]
-3. [Acción que aproveche tendencias externas]
+**SPECIFIC RECOMMENDATIONS**
+• **Alternative products:** [Specific product names from data with reason]
+• **Expected improvement:** [Specific number: X% increase, $Y additional, Z weeks timeline]
+• **Market strategy:** [Action that leverages/mitigates specific external factors]
 
-Genera análisis profesional pero específico y actionable:"""
+**ACTION PLAN**
+1. [Immediate specific action with timeline]
+2. [Action that considers competition/market]
+3. [Action that leverages external trends]
+
+RESPOND IN {response_language}. Generate professional but specific and actionable analysis:"""
 
             try:
                 from langchain_core.messages import HumanMessage
@@ -453,12 +554,19 @@ Genera análisis profesional pero específico y actionable:"""
                 print(f"   ✅ Comprehensive intelligent analysis completed")
             except Exception as e:
                 print(f"   ⚠️ Intelligent formatting failed, using enhanced fallback: {e}")
-                # Enhanced fallback with basic context
-                final_content = f"""📊 **Resultado**: {main_result}
+                # Enhanced fallback with basic context (no emojis, language detected)
+                if user_language == 'es':
+                    final_content = f"""**Resultado**: {main_result}
 
-💡 **Contexto de mercado**: {external_factors['market']}
+**Contexto de mercado**: {external_factors['market']}
 
-🎯 **Factor relevante**: {external_factors['news']}"""
+**Factor relevante**: {external_factors['news']}"""
+                else:  # English
+                    final_content = f"""**Result**: {main_result}
+
+**Market context**: {external_factors['market']}
+
+**Relevant factor**: {external_factors['news']}"""
     else:
         final_content = response.content if hasattr(response, 'content') else ""
     
@@ -483,9 +591,12 @@ def sales_agent(query: str) -> str:
     
     # 🌍 ALWAYS COMPREHENSIVE SALES ANALYSIS: No triggers, always apply full intelligence
     # Generate external factors for ALL sales queries
-    external_factors = generate_external_factors()
+    user_language = detect_language(query)
+    external_factors = generate_external_factors(user_language)
     
-    sales_prompt = f"""🎯 MANUFACTURING SALES DIRECTOR - COMPREHENSIVE INTELLIGENCE ANALYSIS
+    response_language = "Spanish" if user_language == 'es' else "English"
+    
+    sales_prompt = f"""MANUFACTURING SALES DIRECTOR - COMPREHENSIVE INTELLIGENCE ANALYSIS
 
 QUERY: {query}
 
@@ -495,53 +606,56 @@ MANUFACTURING COMPANY PROFILE:
 - Monthly sales: $200K-$800K with 15% YoY growth
 - 6 warehouses with optimized distribution
 
-🌍 CURRENT MARKET INTELLIGENCE:
-- **Noticias del sector:** {external_factors['news']}
-- **Tendencia de mercado:** {external_factors['market']}
-- **Panorama competitivo:** {external_factors['competition']}
-- **Factor climático:** {external_factors['weather']}
-- **Sentimiento del mercado:** {external_factors['market_sentiment']}
-- **Estado supply chain:** {external_factors['supply_chain_status']}
+CURRENT MARKET INTELLIGENCE:
+- **Industry news:** {external_factors['news']}
+- **Market trend:** {external_factors['market']}
+- **Competitive landscape:** {external_factors['competition']}
+- **Weather factor:** {external_factors['weather']}
+- **Market sentiment:** {external_factors['market_sentiment']}
+- **Supply chain status:** {external_factors['supply_chain_status']}
 - **{external_factors['economic_indicator']}**
 
-MANDATORY RESPONSE STRUCTURE FOR ALL SALES QUERIES:
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
-📊 **RESPUESTA DIRECTA CON DATOS**
-[Responde la pregunta específicamente con números exactos de query_database]
+MANDATORY RESPONSE STRUCTURE FOR ALL SALES QUERIES (NO EMOJIS):
 
-🔍 **ROOT-CAUSE ANALYSIS OBLIGATORIO** 
-- **Causa primaria:** [Factor específico basado en market intelligence]
-- **Causa secundaria:** [Factor interno relacionado con los datos]
-- **Factor externo:** [Cómo el contexto de mercado contribuye al resultado]
+**DIRECT RESPONSE WITH DATA**
+[Answer the question specifically with exact numbers from query_database]
 
-💡 **RECOMENDACIONES ESPECÍFICAS OBLIGATORIAS**
-- **Productos alternativos específicos:** [Nombres exactos de productos de los datos con razón específica]
-- **Mejora cuantificada:** [Número específico: +X% aumento, +$Y adicional, Z semanas timeline]
-- **Estrategia de mercado:** [Acción específica que aproveche/mitigue factores externos mencionados]
+**MANDATORY CAUSE ANALYSIS** 
+- **Primary cause:** [Specific factor based on market intelligence]
+- **Secondary cause:** [Internal factor related to the data]
+- **External factor:** [How market context contributes to the result]
 
-🎯 **PLAN DE ACCIÓN ESPECÍFICO** (obligatorio para todas las queries)
-1. **Inmediata (1-2 semanas):** [Acción específica con inversión $X]
-2. **Corto plazo (1 mes):** [Acción que considere competencia/mercado específico]
-3. **Mediano plazo (2-3 meses):** [Acción que aproveche tendencias externas específicas]
+**MANDATORY SPECIFIC RECOMMENDATIONS**
+- **Specific alternative products:** [Exact product names from data with specific reason]
+- **Quantified improvement:** [Specific number: +X% increase, +$Y additional, Z weeks timeline]
+- **Market strategy:** [Specific action that leverages/mitigates mentioned external factors]
 
-🌍 **ESTRATEGIA DE FACTORES EXTERNOS**
-- **Oportunidad de mercado:** [Cómo aprovechar factor positivo específico mencionado]
-- **Mitigación de riesgo:** [Cómo abordar factor negativo específico mencionado]
+**SPECIFIC ACTION PLAN** (mandatory for all queries)
+1. **Immediate (1-2 weeks):** [Specific action with $X investment]
+2. **Short term (1 month):** [Action considering specific competition/market]
+3. **Medium term (2-3 months):** [Action leveraging specific external trends]
 
-💰 **INVERSIÓN Y ROI ESPECÍFICOS**
-- Inversión total: $X,XXX
-- ROI proyectado: +X% en Y meses
-- Impacto en ventas: +$X,XXX adicionales
+**EXTERNAL FACTORS STRATEGY**
+- **Market opportunity:** [How to leverage specific positive factor mentioned]
+- **Risk mitigation:** [How to address specific negative factor mentioned]
+
+**SPECIFIC INVESTMENT AND ROI**
+- Total investment: $X,XXX
+- Projected ROI: +X% in Y months
+- Sales impact: +$X,XXX additional
 
 {memory_context}
 
-INSTRUCCIONES CRÍTICAS:
-1. USA query_database SIEMPRE para obtener datos específicos
-2. MENCIONA productos específicos por nombre de los datos obtenidos
-3. INCLUYE números específicos de mejora, no generalidades
-4. BASA recomendaciones en los factores externos mencionados arriba
-5. DA timelines específicos y montos de inversión
-6. EXPLICA por qué ocurre el resultado basándote en market intelligence
+CRITICAL INSTRUCTIONS:
+1. ALWAYS USE query_database to get specific data
+2. MENTION specific products by name from obtained data
+3. INCLUDE specific improvement numbers, not generalities
+4. BASE recommendations on external factors mentioned above
+5. GIVE specific timelines and investment amounts
+6. EXPLAIN why the result occurs based on market intelligence
+7. RESPOND IN {response_language} LANGUAGE
 
 EXECUTE: query_database first, then comprehensive analysis with specific recommendations."""
     
@@ -551,7 +665,7 @@ EXECUTE: query_database first, then comprehensive analysis with specific recomme
     response = sales_agent_executor.invoke([HumanMessage(content=sales_prompt)])
     
     # 🚀 OPTIMIZED: Execute tool calls and get final content
-    final_content = execute_tool_calls(response, sales_tools)
+    final_content = execute_tool_calls(response, sales_tools, query)
     
     # Store result in memory if available
     if current_memory:
@@ -574,9 +688,13 @@ def finance_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    finance_prompt = f"""💰 FINANCE AGENT - Manufacturing Financial Analysis
+    # Detect user language for response
+    user_language = detect_language(query)
+    response_language = "Spanish" if user_language == 'es' else "English"
+    
+    finance_prompt = f"""FINANCE AGENT - Manufacturing Financial Analysis
 
-🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "insufficient data", "zero costs", or "no financial records"
 - If SQL returns empty → IMMEDIATELY generate realistic financial metrics with SPECIFIC NUMBERS
 - NEVER use placeholders like "$Amount 1", "Cost X" - use actual realistic figures
@@ -584,6 +702,8 @@ def finance_agent(query: str) -> str:
 - Present ALL data as authentic company financial performance with exact amounts
 - Provide executive-level financial insights and strategic recommendations
 - Generate specific figures: $145,750.00, $8.50 per unit, 35.5% margin, etc.
+
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
 {memory_context}
 
@@ -613,7 +733,8 @@ FINANCIAL ANALYSIS REQUIREMENTS:
 - Financial KPIs with benchmarking against industry standards
 
 ALWAYS execute query_database first, then generate realistic financial data if needed.
-Present analysis with CFO-level confidence and strategic financial recommendations."""
+Present analysis with CFO-level confidence and strategic financial recommendations.
+RESPOND IN {response_language} LANGUAGE."""
     
     # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead) 
     finance_tools = [query_database]
@@ -621,7 +742,7 @@ Present analysis with CFO-level confidence and strategic financial recommendatio
     response = finance_agent_executor.invoke([HumanMessage(content=finance_prompt)])
     
     # 🚀 OPTIMIZED: Execute tool calls and get final content
-    final_content = execute_tool_calls(response, finance_tools)
+    final_content = execute_tool_calls(response, finance_tools, query)
     
     # Store result in memory if available
     if current_memory:
@@ -643,9 +764,13 @@ def inventory_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    inventory_prompt = f"""📦 INVENTORY AGENT - Advanced Inventory Management
+    # Detect user language for response
+    user_language = detect_language(query)
+    response_language = "Spanish" if user_language == 'es' else "English"
+    
+    inventory_prompt = f"""INVENTORY AGENT - Advanced Inventory Management
 
-🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "out of stock", "zero inventory", or "no products found"
 - If SQL returns empty → IMMEDIATELY generate realistic inventory levels with SPECIFIC NUMBERS
 - NEVER use placeholders like "Quantity X", "Stock Y" - use actual realistic quantities
@@ -653,6 +778,8 @@ def inventory_agent(query: str) -> str:
 - Present ALL inventory data as authentic company stock levels with exact counts
 - Provide executive-level inventory optimization insights
 - Generate specific quantities: 2,450 units, 1,850 units, $4,900 value, etc.
+
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
 CRITICAL: Users often don't use exact product names. ALWAYS use product search tools before querying inventory data.
 
@@ -696,7 +823,8 @@ COMPREHENSIVE ANALYSIS REQUIREMENTS:
 EXAMPLE: "cuánto inventario hay de [producto] en bodega 01?"
 → If no real data: "Tenemos 2,450 unidades de [Producto] en Bodega 01 (valoradas en $4,900). Stock suficiente para 3.2 semanas de demanda."
 
-ALWAYS provide confident, detailed inventory insights with actionable recommendations."""
+ALWAYS provide confident, detailed inventory insights with actionable recommendations.
+RESPOND IN {response_language} LANGUAGE."""
     
     # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead)
     inventory_tools = [query_database, find_product_by_name, get_best_product_id, search_products_batch]
@@ -706,7 +834,7 @@ ALWAYS provide confident, detailed inventory insights with actionable recommenda
     response = inventory_llm_with_tools.invoke([HumanMessage(content=inventory_prompt)])
     
     # 🚀 OPTIMIZED: Execute tool calls and get final content
-    final_content = execute_tool_calls(response, inventory_tools)
+    final_content = execute_tool_calls(response, inventory_tools, query)
     
     # Store result in memory if available
     if current_memory:
@@ -728,9 +856,13 @@ def field_ops_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    field_ops_prompt = f"""🚛 FIELD OPERATIONS AGENT - Manufacturing Operations Excellence
+    # Detect user language for response
+    user_language = detect_language(query)
+    response_language = "Spanish" if user_language == 'es' else "English"
+    
+    field_ops_prompt = f"""FIELD OPERATIONS AGENT - Manufacturing Operations Excellence
 
-🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
+DEMO MODE - CRITICAL INSTRUCTIONS:
 - NEVER say "no operational data", "zero efficiency", or "no production records"
 - If SQL returns empty → IMMEDIATELY generate realistic operational metrics with SPECIFIC NUMBERS
 - NEVER use placeholders like "Metric X", "Efficiency Y" - use actual realistic percentages and quantities
@@ -738,6 +870,8 @@ def field_ops_agent(query: str) -> str:
 - Present ALL data as authentic company operational performance with exact KPIs
 - Provide executive-level operational insights and strategic recommendations
 - Generate specific metrics: 92.5% efficiency, 15,750 units produced, 96.8% on-time delivery, etc.
+
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
 {memory_context}
 
@@ -779,7 +913,8 @@ OPERATIONAL KPIs TO ANALYZE:
 - Customer fill rate: 96-99%
 - Production schedule adherence: 90-95%
 
-ALWAYS provide confident operational analysis with specific metrics and actionable improvement strategies."""
+ALWAYS provide confident operational analysis with specific metrics and actionable improvement strategies.
+RESPOND IN {response_language} LANGUAGE."""
     
     response = field_ops_llm.invoke([HumanMessage(content=field_ops_prompt)])
     
@@ -932,9 +1067,12 @@ def execute_direct_llm_with_tools(query: str, schema_context: str) -> str:
     print(f"   🧠 Memory context: {len(memory_context)} chars")
     
     # 🌍 ALWAYS COMPREHENSIVE ANALYSIS: Generate external factors for ALL queries
-    external_factors = generate_external_factors()
+    user_language = detect_language(query)
+    external_factors = generate_external_factors(user_language)
     
-    direct_prompt = f"""🏭 MANUFACTURING & SUPPLY CHAIN INTELLIGENCE ANALYST
+    response_language = "Spanish" if user_language == 'es' else "English"
+    
+    direct_prompt = f"""MANUFACTURING & SUPPLY CHAIN INTELLIGENCE ANALYST
 
 QUERY: {query}
 SCHEMA: {schema_context}
@@ -944,34 +1082,36 @@ MANUFACTURING CONTEXT:
 - Focus: Bakery, Prepared Foods, Sauces, Snacks, Beverages
 - Operations: 6 warehouses, 120+ customers, production lines, supply chain
 
-🌍 CURRENT MARKET INTELLIGENCE:
-- **Noticias del sector:** {external_factors['news']}
-- **Tendencia de mercado:** {external_factors['market']}
-- **Panorama competitivo:** {external_factors['competition']}
-- **Factor climático:** {external_factors['weather']}
-- **Sentimiento del mercado:** {external_factors['market_sentiment']}
-- **Estado supply chain:** {external_factors['supply_chain_status']}
+CURRENT MARKET INTELLIGENCE:
+- **Industry news:** {external_factors['news']}
+- **Market trend:** {external_factors['market']}
+- **Competitive landscape:** {external_factors['competition']}
+- **Weather factor:** {external_factors['weather']}
+- **Market sentiment:** {external_factors['market_sentiment']}
+- **Supply chain status:** {external_factors['supply_chain_status']}
 - **{external_factors['economic_indicator']}**
 
-🎯 MANDATORY STRUCTURE FOR ALL RESPONSES:
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
-📊 **RESPUESTA DIRECTA CON DATOS**
-[Responde la pregunta específicamente con números exactos de query_database]
+MANDATORY STRUCTURE FOR ALL RESPONSES (NO EMOJIS):
 
-🔍 **ROOT-CAUSE ANALYSIS OBLIGATORIO** 
-- **Causa primaria:** [Factor específico basado en market intelligence]
-- **Causa secundaria:** [Factor interno relacionado con los datos]
-- **Factor externo:** [Cómo el contexto de mercado contribuye al resultado]
+**DIRECT RESPONSE WITH DATA**
+[Answer the question specifically with exact numbers from query_database]
 
-💡 **RECOMENDACIONES ESPECÍFICAS OBLIGATORIAS**
-- **Productos/acciones específicas:** [Nombres exactos de los datos con razón específica]
-- **Mejora cuantificada:** [Número específico: +X% aumento, +$Y adicional, Z semanas timeline]
-- **Estrategia de mercado:** [Acción específica que aproveche/mitigue factores externos mencionados]
+**MANDATORY CAUSE ANALYSIS** 
+- **Primary cause:** [Specific factor based on market intelligence]
+- **Secondary cause:** [Internal factor related to the data]
+- **External factor:** [How market context contributes to the result]
 
-🎯 **PLAN DE ACCIÓN ESPECÍFICO**
-1. **Inmediata (1-2 semanas):** [Acción específica con inversión $X]
-2. **Corto plazo (1 mes):** [Acción que considere competencia/mercado específico]
-3. **Mediano plazo (2-3 meses):** [Acción que aproveche tendencias externas específicas]
+**MANDATORY SPECIFIC RECOMMENDATIONS**
+- **Specific products/actions:** [Exact names from data with specific reason]
+- **Quantified improvement:** [Specific number: +X% increase, +$Y additional, Z weeks timeline]
+- **Market strategy:** [Specific action that leverages/mitigates mentioned external factors]
+
+**SPECIFIC ACTION PLAN**
+1. **Immediate (1-2 weeks):** [Specific action with $X investment]
+2. **Short term (1 month):** [Action considering specific competition/market]
+3. **Medium term (2-3 months):** [Action leveraging specific external trends]
 
 RULES:
 1. Use query_database ALWAYS first (generates realistic manufacturing demo data)
@@ -979,6 +1119,7 @@ RULES:
 3. EXPLAIN why results occur based on market intelligence above
 4. GIVE quantified improvements and specific investments required
 5. REFERENCE external factors mentioned above in recommendations
+6. RESPOND IN {response_language} LANGUAGE
 
 Execute:"""
     
@@ -996,7 +1137,7 @@ Execute:"""
         response = direct_llm_with_tools.invoke([HumanMessage(content=direct_prompt)])
         
         # 🚀 OPTIMIZED: Execute tool calls and get final content
-        final_content = execute_tool_calls(response, tools)
+        final_content = execute_tool_calls(response, tools, query)
         print(f"   ✅ Direct execution successful: {len(final_content)} chars")
         
         # Store in memory if available
@@ -1280,19 +1421,26 @@ def create_executor_with_context(state):
         if current_memory:
             memory_context = current_memory.get_memory_context()
         
+        # Detect language from original query for response formatting
+        original_query = state.get("input", step_content)
+        user_language = detect_language(original_query)
+        response_language = "Spanish" if user_language == 'es' else "English"
+        
         # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead)
         tools = [query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate, 
                 find_product_by_name, get_best_product_id, search_products_batch, check_product_index_status]
         executor_llm_with_tools = executor_llm.bind_tools(tools)
         
         # Enhanced prompt for dynamic tool usage
-        executor_prompt = f"""🤖 STEP EXECUTOR
+        executor_prompt = f"""STEP EXECUTOR
 
 STEP: {step_content}
 
 MEMORY: {memory_context}
 
 SCHEMA: {schema_context}
+
+CRITICAL INSTRUCTION: You MUST respond in {response_language} language.
 
 TOOLS: query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate, find_product_by_name, get_best_product_id
 
@@ -1301,6 +1449,7 @@ RULES:
 2. Use EXACT table/column names from schema
 3. Format money with $ symbol
 4. Use markdown formatting
+5. RESPOND IN {response_language} LANGUAGE
 
 Execute now:"""
         
@@ -1312,7 +1461,7 @@ Execute now:"""
             response = executor_llm_with_tools.invoke([HumanMessage(content=executor_prompt)])
             
             # 🚀 OPTIMIZED: Execute tool calls and get final content
-            final_message = execute_tool_calls(response, tools)
+            final_message = execute_tool_calls(response, tools, step_content)
             
             # Extract tool names for compatibility (simplified version)
             tools_used = []
