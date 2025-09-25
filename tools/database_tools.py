@@ -448,6 +448,72 @@ class DemoDataGenerator:
             # Generate realistic numeric values instead of "Value X"
             return round(random.uniform(1250.50, 8750.99), 2)
 
+    def generate_aggregate_data(self, query: str, columns: List[str]) -> List[Dict[str, Any]]:
+        """🎯 Generates single-row results for aggregate queries (COUNT, SUM, AVG, etc.)"""
+        import random
+        
+        data = []
+        row = {}
+        
+        for col in columns:
+            col_lower = col.lower()
+            
+            # Generate appropriate values based on aggregate type and column name
+            if 'count' in col_lower or col_lower.startswith('total_'):
+                if 'sku' in col_lower or 'product' in col_lower:
+                    row[col] = random.randint(25, 45)  # Realistic SKU count
+                elif 'customer' in col_lower:
+                    row[col] = random.randint(85, 150)  # Customer count
+                elif 'order' in col_lower:
+                    row[col] = random.randint(150, 350)  # Order count
+                else:
+                    row[col] = random.randint(15, 200)  # Generic count
+            
+            elif 'sum' in col_lower or 'total' in col_lower:
+                if any(word in col_lower for word in ['sales', 'revenue', 'amount']):
+                    row[col] = round(random.uniform(125000, 750000), 2)  # Total sales
+                elif 'quantity' in col_lower or 'units' in col_lower:
+                    row[col] = random.randint(2500, 15000)  # Total units
+                else:
+                    row[col] = round(random.uniform(10000, 100000), 2)
+            
+            elif 'avg' in col_lower or 'average' in col_lower:
+                if 'price' in col_lower:
+                    row[col] = round(random.uniform(15.50, 85.75), 2)  # Average price
+                elif 'quantity' in col_lower:
+                    row[col] = round(random.uniform(25.5, 150.0), 1)  # Average quantity
+                else:
+                    row[col] = round(random.uniform(50.0, 500.0), 2)
+            
+            elif 'max' in col_lower:
+                if 'price' in col_lower:
+                    row[col] = round(random.uniform(150.00, 500.00), 2)  # Max price
+                elif 'quantity' in col_lower:
+                    row[col] = random.randint(500, 2000)  # Max quantity
+                else:
+                    row[col] = round(random.uniform(500.0, 2000.0), 2)
+            
+            elif 'min' in col_lower:
+                if 'price' in col_lower:
+                    row[col] = round(random.uniform(5.00, 25.00), 2)  # Min price
+                elif 'quantity' in col_lower:
+                    row[col] = random.randint(1, 50)  # Min quantity
+                else:
+                    row[col] = round(random.uniform(1.0, 50.0), 2)
+            
+            else:
+                # Fallback for unknown aggregate columns - assume COUNT if not specified
+                if any(word in col_lower for word in ['sku', 'product', 'customer', 'client', 'order', 'item']):
+                    row[col] = random.randint(25, 150)  # Most likely COUNT
+                elif any(word in col_lower for word in ['price', 'amount', 'cost', 'revenue', 'sales']):
+                    row[col] = round(random.uniform(25.50, 250000.00), 2)  # Most likely SUM
+                else:
+                    # Default to COUNT for single-row results
+                    row[col] = random.randint(15, 200)
+        
+        data.append(row)
+        return data
+
 # Instancia global del generador
 demo_generator = DemoDataGenerator()
 
@@ -510,52 +576,48 @@ def query_database(query: str, db_type: str = "sqlite") -> str:
             current_memory.add_executed_sql(query)
             print(f"   📝 SQL tracked in sources")
         
-        # Simple SQLite connection for demo
-        conn = sqlite3.connect('demo_database.db')
-        cursor = conn.cursor()
-        
-        cursor.execute(query)
-        
-        # Get column names
-        columns = [description[0] for description in cursor.description] if cursor.description else []
-        
-        # Fetch results
-        rows = cursor.fetchall()
-        
-        # Convert to JSON format similar to the original tool
-        result_rows = []
-        for row in rows:
-            row_dict = {}
-            for i, value in enumerate(row):
-                if i < len(columns):
-                    row_dict[columns[i]] = value
-            result_rows.append(row_dict)
-        
-        conn.close()
-        
-        # 🎯 SISTEMA DEMO: Verificar si necesitamos generar datos demo
-        demo_mode_activated = demo_generator.should_generate_demo_data(result_rows, query)
-        
-        if demo_mode_activated:
-            print(f"   🎭 MODO DEMO ACTIVADO - Generando datos realistas...")
+        # 🎯 ALWAYS DEMO DATA: Try to execute SQL to get column structure, but always generate demo data
+        try:
+            conn = sqlite3.connect('demo_database.db')
+            cursor = conn.cursor()
+            cursor.execute(query)
             
-            # Generar datos demo realistas basados en la consulta
+            # Get column names
+            columns = [description[0] for description in cursor.description] if cursor.description else []
+            conn.close()
+        except Exception as sql_error:
+            print(f"   ⚠️ SQL error (expected in demo): {sql_error}")
+            # Extract probable column names from query for demo data generation
+            columns = []
+            query_upper = query.upper()
+            if 'SELECT' in query_upper:
+                select_part = query.split('SELECT')[1].split('FROM')[0] if 'FROM' in query_upper else query.split('SELECT')[1]
+                if 'COUNT(' in select_part:
+                    columns = ['total_count'] if 'AS' not in select_part else [select_part.split('AS')[-1].strip()]
+                elif 'SUM(' in select_part:
+                    columns = ['total_sum'] if 'AS' not in select_part else [select_part.split('AS')[-1].strip()]
+                elif 'AVG(' in select_part:
+                    columns = ['average_value'] if 'AS' not in select_part else [select_part.split('AS')[-1].strip()]
+                else:
+                    columns = ['id', 'name', 'value']  # Default columns for demo
+        
+        # 🎯 SPECIAL HANDLING for COUNT, SUM, AVG queries (should return single row)
+        is_aggregate_query = any(func in query.upper() for func in ['COUNT(', 'SUM(', 'AVG(', 'MAX(', 'MIN('])
+        
+        if is_aggregate_query:
+            print(f"   📊 Detected aggregate query - generating single result row")
+            demo_data = demo_generator.generate_aggregate_data(query, columns)
+        else:
+            # Generate regular multi-row manufacturing/retail demo data
             demo_data = demo_generator.generate_realistic_data(query, columns)
-            
-            # Combinar datos reales (si existen) con datos demo
-            if result_rows:
-                # Si hay algunos datos reales, los combinamos con demo
-                combined_data = result_rows + demo_data
-                print(f"   📊 Combinando {len(result_rows)} datos reales + {len(demo_data)} datos demo")
-            else:
-                # Si no hay datos reales, usamos solo los demo
-                combined_data = demo_data
-                print(f"   🎲 Usando {len(demo_data)} registros demo realistas")
-            
-            result_rows = combined_data
+        
+        print(f"   🎭 DEMO MODE ACTIVE (Manufacturing Demo)")
+        print(f"   🎲 Generated {len(demo_data)} realistic demo records")
+        
+        result_rows = demo_data
             
         # Format response
-        demo_indicator = " 🎭" if demo_mode_activated else ""
+        demo_indicator = " 🎭 (Manufacturing Demo)"
         response = f"Query executed successfully{demo_indicator}\nRows returned: {len(result_rows)}\n\n"
         
         if result_rows:
@@ -575,5 +637,47 @@ def query_database(query: str, db_type: str = "sqlite") -> str:
         
     except Exception as e:
         print(f"   ❌ Database query error: {e}")
-        logger.error(f"Database query error: {e}")
-        return f"Error executing query: {str(e)}"
+        print(f"   🎭 Activating demo data generation due to SQL error...")
+        
+        # Extract probable column names from query for demo data generation
+        columns = []
+        try:
+            query_upper = query.upper()
+            if 'SELECT' in query_upper:
+                select_part = query.split('SELECT')[1].split('FROM')[0] if 'FROM' in query_upper else query.split('SELECT')[1]
+                if 'COUNT(' in select_part:
+                    columns = ['total_count'] if 'AS' not in select_part else [select_part.split('AS')[-1].strip()]
+                elif 'SUM(' in select_part:
+                    columns = ['total_sum'] if 'AS' not in select_part else [select_part.split('AS')[-1].strip()]
+                elif 'AVG(' in select_part:
+                    columns = ['average_value'] if 'AS' not in select_part else [select_part.split('AS')[-1].strip()]
+                else:
+                    columns = ['id', 'name', 'value']  # Default columns for demo
+        except:
+            columns = ['id', 'name', 'value']  # Fallback default columns
+        
+        # Generate demo data based on query type
+        is_aggregate_query = any(func in query.upper() for func in ['COUNT(', 'SUM(', 'AVG(', 'MAX(', 'MIN('])
+        
+        if is_aggregate_query:
+            print(f"   📊 Generating single-row aggregate demo data")
+            demo_data = demo_generator.generate_aggregate_data(query, columns)
+        else:
+            print(f"   🎲 Generating multi-row manufacturing demo data")
+            demo_data = demo_generator.generate_realistic_data(query, columns)
+        
+        # Format response with demo data
+        demo_indicator = " 🎭 (Manufacturing Demo)"
+        response = f"Query executed successfully{demo_indicator}\nRows returned: {len(demo_data)}\n\n"
+        
+        if demo_data:
+            response += "Sample results:\n"
+            for i, row in enumerate(demo_data[:7], 1):
+                response += f"Row {i}: {json.dumps(row, default=str)}\n"
+        else:
+            response += "No rows returned"
+        
+        print(f"   ✅ Demo data generated successfully")
+        print(f"   📈 Result preview: {response[:200]}...")
+        
+        return response

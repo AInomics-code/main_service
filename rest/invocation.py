@@ -5,7 +5,7 @@ import threading
 import openai
 from langchain_openai import ChatOpenAI
 from config.settings import settings
-from langgraph.prebuilt import create_react_agent
+# React agent removed for performance - using bind_tools instead
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
@@ -97,6 +97,374 @@ def calculate(expression: str) -> str:
 # Global variable to store current memory instance during execution
 current_memory: ShortTermMemory = None
 
+# 🎯 STRATEGIC ANALYSIS TEMPLATE - Forces specific, actionable responses
+STRATEGIC_ANALYSIS_TEMPLATE = """
+📊 SITUACIÓN ACTUAL:
+- Métrica clave 1: [valor específico con unidades]
+- Métrica clave 2: [valor específico con unidades]
+- Problema identificado: [descripción específica con números]
+
+🎯 PLAN DE ACCIÓN (4-6 pasos específicos):
+PASO 1: [Acción específica y concreta]
+- Recursos: [detalles específicos]
+- Timeline: [X semanas exactas]
+- Costo: $[cantidad específica]
+- Responsable: [quién ejecuta]
+
+PASO 2: [Acción específica y concreta]
+- Recursos: [detalles específicos]
+- Timeline: [X semanas exactas]
+- Costo: $[cantidad específica]
+- Responsable: [quién ejecuta]
+
+[continuar para todos los pasos...]
+
+📈 RESULTADOS PROYECTADOS (3-6 meses):
+- Métrica 1: Cambio de $X a $Y (+Z%)
+- Métrica 2: Cambio de X unidades a Y unidades (+Z%)
+- ROI esperado: X% en Y meses
+
+⚠️ RIESGOS Y CONTINGENCIAS:
+- Riesgo 1: [descripción] → Mitigación: [plan específico]
+- Riesgo 2: [descripción] → Mitigación: [plan específico]
+
+💰 INVERSIÓN TOTAL: $[cantidad]
+🎯 ROI PROYECTADO: X% en Y meses
+⏰ TIMELINE TOTAL: X semanas
+"""
+
+def generate_external_factors() -> dict:
+    """🌍 Genera factores externos simulados (noticias, mercado, competencia, clima)"""
+    import random
+    from datetime import datetime, timedelta
+    
+    # Noticias del sector manufacturing/retail/supply chain
+    news_headlines = [
+        "📰 Escasez global de semiconductores afecta producción manufacturera (-15%)",
+        "📰 Aumento en demanda de productos sustentables (+23% YoY)",
+        "📰 Nuevas regulaciones ambientales impactan costos de manufactura",
+        "📰 Guerra comercial afecta cadenas de suministro internacionales",
+        "📰 Boom del e-commerce impulsa demanda de productos de retail (+18%)",
+        "📰 Inflación en materias primas incrementa costos operativos (+12%)",
+        "📰 Automatización industrial reduce costos laborales (-8%)",
+        "📰 Crisis energética europea impacta precios de manufactura"
+    ]
+    
+    # Datos del mercado
+    market_trends = [
+        "📈 Demanda de productos premium aumentó 15% este trimestre",
+        "📉 Precios de materias primas bajaron 8% en el último mes",
+        "📊 Mercado de manufactura creció 6.2% anual",
+        "💹 Inversión en tecnología industrial aumentó 22%",
+        "🏪 Retail físico se recupera (+11%) post-pandemia",
+        "🚚 Costos de logística incrementaron 18% por combustibles",
+        "💰 Márgenes de ganancia promedio del sector: 12.5%",
+        "📱 Digitalización acelera transformación industrial"
+    ]
+    
+    # Análisis de competencia
+    competitor_insights = [
+        "🏆 Competidor líder mantiene 28% market share con innovación",
+        "⚔️ Nueva startup disrumpe mercado con precios 30% menores",
+        "📊 Top 3 competidores controlan 65% del mercado local",
+        "🎯 Competidor principal lanza campaña agresiva de precios",
+        "🚀 Empresa rival anuncia expansión internacional",
+        "📈 Competidor aumentó producción 40% en Q3",
+        "💡 Rival introduce tecnología disruptiva en el mercado",
+        "🤝 Fusión de competidores crea nuevo líder del sector"
+    ]
+    
+    # Factores climáticos
+    weather_impacts = [
+        "🌧️ Lluvias intensas afectan transporte y distribución (-12%)",
+        "☀️ Buen clima impulsa demanda estacional (+8%)",
+        "❄️ Ola de frío incrementa demanda de productos específicos",
+        "🌪️ Huracán en costa este disrumpe cadena de suministro",
+        "🌡️ Temperaturas récord aumentan costos de refrigeración",
+        "🌊 Sequía afecta disponibilidad de materias primas agrícolas",
+        "⛈️ Tormentas causan retrasos en envíos internacionales",
+        "🌿 Temporada favorable para producción agrícola (+14%)"
+    ]
+    
+    return {
+        "news": random.choice(news_headlines),
+        "market": random.choice(market_trends),
+        "competition": random.choice(competitor_insights),
+        "weather": random.choice(weather_impacts),
+        "market_sentiment": random.choice(["🟢 Optimista", "🟡 Neutral", "🔴 Pesimista"]),
+        "supply_chain_status": random.choice(["🟢 Estable", "🟡 Moderado", "🔴 Crítico"]),
+        "economic_indicator": f"📊 Índice manufacturero: {random.randint(45, 65)}/100"
+    }
+
+# 🚫 TRIGGERS REMOVED: No more hardcoded detection functions
+# The system now ALWAYS applies intelligent analysis with external factors
+
+def format_aggregate_response(query: str, raw_result: str) -> str:
+    """🌐 UNIVERSAL formatter - Uses LLM to format ANY aggregate response naturally"""
+    
+    # Extract the numeric value first for fallback
+    extracted_value = None
+    try:
+        import json
+        import re
+        row_match = re.search(r'Row 1: ({.*?})', raw_result)
+        if row_match:
+            data = json.loads(row_match.group(1))
+            extracted_value = list(data.values())[0] if data else None
+    except:
+        pass
+    
+    # If no query provided, create a reasonable default based on the data
+    if not query or query.strip() == "":
+        if extracted_value is not None:
+            # Try to guess based on column name in raw_result
+            if 'sku' in raw_result.lower():
+                query = "cuantos sku tengo disponible para la venta?"
+            elif 'product' in raw_result.lower():
+                query = "cuantos productos tengo?"
+            elif 'total' in raw_result.lower():
+                query = "cual es el total?"
+            else:
+                query = "dame el resultado"
+    
+    try:
+        # Generate external context factors
+        external_factors = generate_external_factors()
+        
+        # 🌍 ALWAYS include root-cause analysis for aggregate responses
+        needs_root_cause = True  # Always analyze causes for aggregated data
+        
+        # Use fast LLM to format the response intelligently
+        formatting_prompt = f"""🎯 ANÁLISIS INTELIGENTE DE DATOS AGREGADOS CON MARKET INTELLIGENCE
+
+PREGUNTA: {query}
+DATOS: {raw_result}
+
+🌍 CONTEXTO DE MERCADO ACTUAL:
+• **Noticias del sector:** {external_factors['news']}
+• **Tendencia de mercado:** {external_factors['market']}
+• **Panorama competitivo:** {external_factors['competition']}
+• **Factor climático:** {external_factors['weather']}
+• **Sentimiento del mercado:** {external_factors['market_sentiment']}
+• **Estado supply chain:** {external_factors['supply_chain_status']}
+• **{external_factors['economic_indicator']}**
+
+INSTRUCCIONES OBLIGATORIAS:
+1. **RESPUESTA DIRECTA**: Extrae y formatea el número principal naturalmente
+2. **ROOT-CAUSE ANALYSIS**: Identifica 2-3 causas específicas considerando factores externos
+3. **RECOMENDACIONES ESPECÍFICAS**: Incluye productos alternativos/acciones específicas
+4. **MEJORAS CUANTIFICADAS**: Da números específicos de mejora esperada
+5. **ESTRATEGIA DE MERCADO**: Basada en los factores externos mencionados
+
+FORMATO OBLIGATORIO:
+📊 **[Respuesta principal formateada con número]**
+
+🔍 **Análisis de causas:**
+• **Causa primaria:** [Factor específico basado en market intelligence]
+• **Causa secundaria:** [Factor interno/operacional]
+• **Factor externo:** [Cómo el contexto de mercado contribuye]
+
+💡 **Recomendaciones específicas:**
+• **Acción inmediata:** [Acción específica con productos/elementos concretos]
+• **Mejora esperada:** [+X% aumento, +$Y adicional, Z semanas timeline]
+• **Estrategia de mercado:** [Acción que aproveche factor externo específico]
+
+🎯 **Plan de acción:**
+1. **Inmediata:** [Acción específica]
+2. **Corto plazo:** [Considerando contexto de mercado]
+
+EJEMPLO:
+Query: "cuantos sku tengo?"
+Respuesta: 
+📦 **Tienes 32 SKUs disponibles para la venta**
+
+🔍 **Análisis de causas:**
+• **Causa primaria:** Optimización de catálogo por costos de almacenamiento elevados
+• **Causa secundaria:** Enfoque en productos de alta rotación para mejorar márgenes
+• **Factor externo:** Crisis energética europea incrementa costos operativos (+12%)
+
+💡 **Recomendaciones específicas:**
+• **Acción inmediata:** Expandir línea de productos sustentables (eco-friendly)
+• **Mejora esperada:** +15% en ventas, +$45,000 adicionales, 8 semanas implementación
+• **Estrategia de mercado:** Aprovechar demanda sustentable (+23% YoY) para diferenciación
+
+🎯 **Plan de acción:**
+1. **Inmediata:** Lanzar 3-5 SKUs eco-friendly aprovechando tendencia sustentable
+2. **Corto plazo:** Optimizar supply chain considerando estado crítico actual
+
+Genera análisis completo y específico:"""
+
+        from langchain_core.messages import HumanMessage
+        formatter_llm = llm_pool.fast_executor
+        formatted_response = formatter_llm.invoke([HumanMessage(content=formatting_prompt)])
+        
+        result = formatted_response.content if hasattr(formatted_response, 'content') else str(formatted_response)
+        print(f"   ✨ Universal aggregate response formatted")
+        return result
+        
+    except Exception as e:
+        print(f"   ⚠️ Error formatting aggregate response: {e}")
+        
+        # Enhanced fallback with smarter formatting
+        if extracted_value is not None:
+            # Smart fallback based on patterns
+            if any(word in raw_result.lower() for word in ['sku', 'product']):
+                return f"📦 Tienes {int(extracted_value)} SKUs disponibles para la venta"
+            elif any(word in raw_result.lower() for word in ['customer', 'client']):
+                return f"👥 Tienes {int(extracted_value)} clientes registrados"
+            elif any(word in raw_result.lower() for word in ['sales', 'revenue', 'amount']) and extracted_value > 1000:
+                return f"💰 Total: ${extracted_value:,.2f}"
+            else:
+                return f"📊 Resultado: {extracted_value}"
+        
+        return raw_result  # Ultimate fallback
+
+def execute_tool_calls(response, available_tools):
+    """🔧 Ejecuta las herramientas solicitadas por el LLM con bind_tools y formatea para usuario"""
+    print(f"   🔧 Processing tool calls from LLM response...")
+    
+    if not hasattr(response, 'tool_calls') or not response.tool_calls:
+        print(f"   ℹ️ No tool calls found in response")
+        return response.content if hasattr(response, 'content') else str(response)
+    
+    # Create tool lookup
+    tool_map = {tool.name: tool for tool in available_tools}
+    
+    tool_results = []
+    raw_data = []
+    
+    for tool_call in response.tool_calls:
+        tool_name = tool_call.get('name', 'unknown')
+        tool_args = tool_call.get('args', {})
+        
+        print(f"      🛠️ Executing tool: {tool_name}")
+        print(f"      📝 Args: {tool_args}")
+        
+        if tool_name in tool_map:
+            try:
+                # Execute the tool using invoke() method (LangChain best practice)
+                tool_function = tool_map[tool_name]
+                
+                # 🚀 FIXED: Use .invoke() instead of direct call
+                if isinstance(tool_args, dict):
+                    # Most tools expect single argument, extract the main parameter
+                    if 'query' in tool_args:
+                        result = tool_function.invoke(tool_args['query'])
+                    elif 'expression' in tool_args:
+                        result = tool_function.invoke(tool_args['expression'])
+                    elif 'product_description' in tool_args:
+                        result = tool_function.invoke(tool_args['product_description'])
+                    elif len(tool_args) == 1:
+                        # Single argument case - extract the value
+                        result = tool_function.invoke(list(tool_args.values())[0])
+                    else:
+                        # Multiple arguments - use first value as fallback
+                        result = tool_function.invoke(list(tool_args.values())[0])
+                else:
+                    # Direct argument case
+                    result = tool_function.invoke(tool_args)
+                
+                tool_results.append(result)
+                raw_data.append({"tool": tool_name, "result": result})
+                print(f"      ✅ Tool executed successfully")
+                
+            except Exception as e:
+                error_msg = f"❌ Error executing {tool_name}: {str(e)}"
+                tool_results.append(error_msg)
+                print(f"      {error_msg}")
+        else:
+            error_msg = f"❌ Tool {tool_name} not found in available tools"
+            tool_results.append(error_msg)
+            print(f"      {error_msg}")
+    
+    # 🚀 OPTIMIZED: Smart formatting with special handling for aggregate queries
+    if tool_results:
+        # Use the first tool result (usually the most relevant)
+        main_result = tool_results[0]
+        original_query = response.content if hasattr(response, 'content') else ""
+        
+        # 🌍 ALWAYS INTELLIGENT ANALYSIS: No triggers, always apply smart formatting with external context
+        print(f"   🧠 Applying universal intelligent analysis with external factors...")
+        
+        # Generate external factors for ALL responses
+        external_factors = generate_external_factors()
+        
+        # Check if it's a simple aggregate (COUNT, SUM, etc.) - these get lighter formatting
+        is_simple_aggregate = (
+            any(func in main_result.upper() for func in ['COUNT(', 'SUM(', 'AVG(', 'MAX(', 'MIN(']) or
+            any(word in main_result.lower() for word in ['total_', 'count_', 'sum_', 'avg_', 'max_', 'min_']) or
+            any(word in original_query.lower() for word in ['cuantos', 'how many', 'total', 'count'])
+        ) and len(main_result) < 300  # Simple if short result
+        
+        if is_simple_aggregate:
+            print(f"   📊 Simple aggregate - applying smart but concise formatting")
+            final_content = format_aggregate_response(original_query, main_result)
+        else:
+            # For ALL other queries: Apply FULL intelligent analysis with external factors
+            print(f"   🔍 Applying comprehensive analysis with market intelligence")
+            
+            formatting_prompt = f"""🎯 ANÁLISIS INTELIGENTE MANUFACTURERO CON MARKET INTELLIGENCE
+
+PREGUNTA ORIGINAL: {original_query}
+DATOS OBTENIDOS: {main_result}
+
+🌍 CONTEXTO DE MERCADO ACTUAL:
+• **Noticias del sector:** {external_factors['news']}
+• **Tendencia de mercado:** {external_factors['market']}  
+• **Panorama competitivo:** {external_factors['competition']}
+• **Factor climático:** {external_factors['weather']}
+• **Sentimiento del mercado:** {external_factors['market_sentiment']}
+• **Estado supply chain:** {external_factors['supply_chain_status']}
+• **{external_factors['economic_indicator']}**
+
+INSTRUCCIONES OBLIGATORIAS:
+1. **RESPUESTA DIRECTA**: Responde la pregunta específicamente con datos exactos
+2. **ROOT-CAUSE ANALYSIS**: Identifica 2-3 causas específicas del resultado considerando factores externos
+3. **PRODUCTOS ALTERNATIVOS**: Si aplica, sugiere productos específicos con nombres exactos de los datos
+4. **MEJORAS CUANTIFICADAS**: Da números específicos de mejora esperada (%, $, timeline)
+5. **ESTRATEGIA BASADA EN CONTEXTO**: Recomendaciones que aprovechen/mitiguen los factores externos
+
+FORMATO OBLIGATORIO:
+📊 **RESPUESTA PRINCIPAL**
+[Responde la pregunta directamente con datos específicos]
+
+🔍 **ANÁLISIS DE CAUSAS** 
+• **Causa primaria:** [Factor interno/externo específico basado en contexto]
+• **Causa secundaria:** [Factor relacionado con market intelligence]
+• **Factor de mercado:** [Cómo el contexto externo contribuye al resultado]
+
+💡 **RECOMENDACIONES ESPECÍFICAS**
+• **Productos alternativos:** [Nombres específicos de productos de los datos con razón]
+• **Mejora esperada:** [Número específico: X% aumento, $Y adicional, Z semanas timeline]
+• **Estrategia de mercado:** [Acción que aproveche/mitigue factores externos específicos]
+
+🎯 **PLAN DE ACCIÓN**
+1. [Acción específica inmediata con timeline]
+2. [Acción que considere competencia/mercado]
+3. [Acción que aproveche tendencias externas]
+
+Genera análisis profesional pero específico y actionable:"""
+
+            try:
+                from langchain_core.messages import HumanMessage
+                formatter_llm = llm_pool.main_executor  # Use main LLM for comprehensive analysis
+                formatted_response = formatter_llm.invoke([HumanMessage(content=formatting_prompt)])
+                final_content = formatted_response.content if hasattr(formatted_response, 'content') else main_result
+                print(f"   ✅ Comprehensive intelligent analysis completed")
+            except Exception as e:
+                print(f"   ⚠️ Intelligent formatting failed, using enhanced fallback: {e}")
+                # Enhanced fallback with basic context
+                final_content = f"""📊 **Resultado**: {main_result}
+
+💡 **Contexto de mercado**: {external_factors['market']}
+
+🎯 **Factor relevante**: {external_factors['news']}"""
+    else:
+        final_content = response.content if hasattr(response, 'content') else ""
+    
+    print(f"   ✅ Tool execution completed: {len(tool_results)} tools executed")
+    return final_content
+
 # Agent tools - these are real agents with LLMs with memory access
 @tool
 def sales_agent(query: str) -> str:
@@ -113,62 +481,83 @@ def sales_agent(query: str) -> str:
     if current_memory:
         memory_context = current_memory.get_memory_context()
     
-    sales_prompt = f"""🏢 SALES AGENT - Manufacturing Company Analysis
+    # 🌍 ALWAYS COMPREHENSIVE SALES ANALYSIS: No triggers, always apply full intelligence
+    # Generate external factors for ALL sales queries
+    external_factors = generate_external_factors()
+    
+    sales_prompt = f"""🎯 MANUFACTURING SALES DIRECTOR - COMPREHENSIVE INTELLIGENCE ANALYSIS
 
-🎭 DEMO MODE - CRITICAL INSTRUCTIONS:
-- NEVER say "no data", "zero sales", or "empty results"
-- If SQL returns empty → IMMEDIATELY generate realistic sales figures with SPECIFIC NUMBERS
-- NEVER use placeholders like "$Value 1", "Figure X" - use actual realistic amounts
-- Act as senior sales analyst with 10+ years experience
-- Present ALL data as authentic company performance with exact metrics
-- Use confident, executive-level language and provide actionable insights
-- Generate specific amounts: $24,750.00, $31,250.50, 1,850 units, 2,340 units, etc.
+QUERY: {query}
+
+MANUFACTURING COMPANY PROFILE:
+- 30 products: Bakery, Prepared Foods, Sauces, Snacks, Beverages
+- 120+ customers: Distributors (40%), Wholesale (30%), Retail (30%)
+- Monthly sales: $200K-$800K with 15% YoY growth
+- 6 warehouses with optimized distribution
+
+🌍 CURRENT MARKET INTELLIGENCE:
+- **Noticias del sector:** {external_factors['news']}
+- **Tendencia de mercado:** {external_factors['market']}
+- **Panorama competitivo:** {external_factors['competition']}
+- **Factor climático:** {external_factors['weather']}
+- **Sentimiento del mercado:** {external_factors['market_sentiment']}
+- **Estado supply chain:** {external_factors['supply_chain_status']}
+- **{external_factors['economic_indicator']}**
+
+MANDATORY RESPONSE STRUCTURE FOR ALL SALES QUERIES:
+
+📊 **RESPUESTA DIRECTA CON DATOS**
+[Responde la pregunta específicamente con números exactos de query_database]
+
+🔍 **ROOT-CAUSE ANALYSIS OBLIGATORIO** 
+- **Causa primaria:** [Factor específico basado en market intelligence]
+- **Causa secundaria:** [Factor interno relacionado con los datos]
+- **Factor externo:** [Cómo el contexto de mercado contribuye al resultado]
+
+💡 **RECOMENDACIONES ESPECÍFICAS OBLIGATORIAS**
+- **Productos alternativos específicos:** [Nombres exactos de productos de los datos con razón específica]
+- **Mejora cuantificada:** [Número específico: +X% aumento, +$Y adicional, Z semanas timeline]
+- **Estrategia de mercado:** [Acción específica que aproveche/mitigue factores externos mencionados]
+
+🎯 **PLAN DE ACCIÓN ESPECÍFICO** (obligatorio para todas las queries)
+1. **Inmediata (1-2 semanas):** [Acción específica con inversión $X]
+2. **Corto plazo (1 mes):** [Acción que considere competencia/mercado específico]
+3. **Mediano plazo (2-3 meses):** [Acción que aproveche tendencias externas específicas]
+
+🌍 **ESTRATEGIA DE FACTORES EXTERNOS**
+- **Oportunidad de mercado:** [Cómo aprovechar factor positivo específico mencionado]
+- **Mitigación de riesgo:** [Cómo abordar factor negativo específico mencionado]
+
+💰 **INVERSIÓN Y ROI ESPECÍFICOS**
+- Inversión total: $X,XXX
+- ROI proyectado: +X% en Y meses
+- Impacto en ventas: +$X,XXX adicionales
 
 {memory_context}
 
-Query: {query}
+INSTRUCCIONES CRÍTICAS:
+1. USA query_database SIEMPRE para obtener datos específicos
+2. MENCIONA productos específicos por nombre de los datos obtenidos
+3. INCLUYE números específicos de mejora, no generalidades
+4. BASA recomendaciones en los factores externos mencionados arriba
+5. DA timelines específicos y montos de inversión
+6. EXPLICA por qué ocurre el resultado basándote en market intelligence
 
-COMPANY PROFILE: Successful manufacturing company with:
-- 30 products across 5 categories (Bakery, Prepared Foods, Sauces, Snacks, Beverages)
-- 120+ active customers (40% distributors, 30% wholesale, 30% retail)
-- Monthly sales range: $200K-$800K with 15% YoY growth
-- Top products: Artisan Bread, Gourmet Sauces, Premium Snacks
-
-DEMO DATA RANGES (use if SQL returns empty):
-- Monthly sales: $200,000 - $800,000
-- Average order size: $1,500 - $8,500
-- Customer orders: 150-300 per month
-- Product units sold: 5,000-25,000 per product/month
-- Profit margins: 25-45% depending on category
-
-EXAMPLE Q4 PRODUCT DATA (adapt year to query context):
-- Q4 Month 1 sales: $18,750.00 (1,250 units)
-- Q4 Month 2 sales: $22,340.00 (1,489 units)  
-- Q4 Month 3 sales: $27,890.00 (1,859 units)
-- Weekly patterns: Mon-Wed: 450 units, Thu-Fri: 380 units, Weekend: 220 units
-- Customer breakdown: Distributors 45% ($31,440), Wholesale 35% ($25,480), Retail 20% ($14,560)
-- Avg price per unit: $15.00, Production cost: $8.50, Margin: 43.3%
-
-ANALYSIS REQUIREMENTS:
-- Sales performance by category/customer type with specific metrics
-- Revenue & profit margins with exact percentages
-- Customer segmentation with actionable insights
-- Product performance trends with growth recommendations
-- Order fulfillment KPIs with optimization opportunities
-- Market expansion strategies with ROI projections
-
-ALWAYS use query_database first, then generate realistic data if needed.
-Present results with full confidence and executive-level recommendations."""
+EXECUTE: query_database first, then comprehensive analysis with specific recommendations."""
     
-    # Create a simple agent that can use database queries
-    sales_agent_executor = sales_llm.bind_tools([query_database])
+    # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead)
+    sales_tools = [query_database]
+    sales_agent_executor = sales_llm.bind_tools(sales_tools)
     response = sales_agent_executor.invoke([HumanMessage(content=sales_prompt)])
+    
+    # 🚀 OPTIMIZED: Execute tool calls and get final content
+    final_content = execute_tool_calls(response, sales_tools)
     
     # Store result in memory if available
     if current_memory:
-        current_memory.store("sales_analysis_result", response.content)
+        current_memory.store("sales_analysis_result", final_content)
     
-    return response.content
+    return final_content
 
 @tool
 def finance_agent(query: str) -> str:
@@ -226,15 +615,19 @@ FINANCIAL ANALYSIS REQUIREMENTS:
 ALWAYS execute query_database first, then generate realistic financial data if needed.
 Present analysis with CFO-level confidence and strategic financial recommendations."""
     
-    # Create a simple agent that can use database queries
-    finance_agent_executor = finance_llm.bind_tools([query_database])
+    # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead) 
+    finance_tools = [query_database]
+    finance_agent_executor = finance_llm.bind_tools(finance_tools)
     response = finance_agent_executor.invoke([HumanMessage(content=finance_prompt)])
+    
+    # 🚀 OPTIMIZED: Execute tool calls and get final content
+    final_content = execute_tool_calls(response, finance_tools)
     
     # Store result in memory if available
     if current_memory:
-        current_memory.store("finance_analysis_result", response.content)
+        current_memory.store("finance_analysis_result", final_content)
     
-    return response.content
+    return final_content
 
 @tool
 def inventory_agent(query: str) -> str:
@@ -305,24 +698,15 @@ EXAMPLE: "cuánto inventario hay de [producto] en bodega 01?"
 
 ALWAYS provide confident, detailed inventory insights with actionable recommendations."""
     
-    # Create an inventory agent executor with access to product search tools
+    # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead)
     inventory_tools = [query_database, find_product_by_name, get_best_product_id, search_products_batch]
-    inventory_agent_executor = create_react_agent(inventory_llm, inventory_tools)
+    inventory_llm_with_tools = inventory_llm.bind_tools(inventory_tools)
     
-    # Execute with tools using react agent
-    agent_input = {"messages": [HumanMessage(content=inventory_prompt)]}
-    response = inventory_agent_executor.invoke(agent_input)
+    # Execute directly with bound tools
+    response = inventory_llm_with_tools.invoke([HumanMessage(content=inventory_prompt)])
     
-    # Extract the final message from react agent response
-    if 'messages' in response:
-        messages = response['messages']
-        ai_messages = [msg for msg in messages if hasattr(msg, 'content') and hasattr(msg, 'type') and msg.type == 'ai']
-        if ai_messages:
-            final_content = ai_messages[-1].content
-        else:
-            final_content = str(response)
-    else:
-        final_content = str(response)
+    # 🚀 OPTIMIZED: Execute tool calls and get final content
+    final_content = execute_tool_calls(response, inventory_tools)
     
     # Store result in memory if available
     if current_memory:
@@ -460,293 +844,24 @@ llm_pool = LLMPool()
 llm = llm_pool.executor
 planner_llm = llm_pool.planner
 
-# Planner prompt
+# 🚀 ULTRA-COMPACT Planner prompt (85% reduction)
 planner_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            """For the given objective, come up with an OPTIMIZED step by step plan with MINIMAL steps. \
-Combine related database operations into single, comprehensive queries whenever possible. \
-Each step should accomplish as much as possible in one operation to optimize execution time.
+            """Create 2-3 OPTIMIZED steps maximum. Combine operations into single SQL queries.
 
-OPTIMIZATION GUIDELINES:
-- Combine SELECT, JOIN, and WHERE operations into single queries
-- Use subqueries or CTEs instead of multiple separate queries
-- Group related analysis tasks together
-- Aim for 2-4 steps maximum for most queries
-- Only separate steps when they require fundamentally different operations or tools
+SCHEMA: {schema_context}
 
-IMPORTANT: You have access to the database schema context that shows the most relevant tables for this query.
-Use this schema context to understand which tables are available and structure OPTIMIZED SQL queries that combine multiple operations.
-
-EXAMPLE - Instead of 6 steps like:
-1. Query backorder table
-2. Join with products table  
-3. Filter active products
-4. Sort by backorder quantity
-5. Check inventory levels
-6. Analyze strategies
-
-Do this in 2-3 optimized steps:
-1. Execute comprehensive query joining backorder, products, and inventory tables with filters and sorting to get complete product backorder analysis
-2. Analyze results and provide strategic recommendations for backorder reduction
-
-SCHEMA CONTEXT:
-{schema_context}""",
+Example: Instead of 6 separate steps → 2 optimized steps:
+1. Execute comprehensive SQL query joining relevant tables  
+2. Analyze results and provide strategic recommendations""",
         ),
         ("placeholder", "{messages}"),
     ]
 )
 
-# Static demo database schema
-DEMO_DATABASE_SCHEMA = """
-MANUFACTURING COMPANY DATABASE SCHEMA (2024-2025 Data):
-
-==== RAW MATERIALS & PRODUCTION ====
-TABLE: raw_materials
-- Description: Raw materials used in production with supplier information
-- Columns:
-  * raw_material_id (TEXT): Unique ID (format: RM_XXX)
-  * name (TEXT): Material name (Wheat Flour, Sugar, Cocoa Powder, etc.)
-  * description (TEXT): Material description
-  * unit_measure (TEXT): kg, liter, ton, bag
-  * cost_per_unit (REAL): Cost per unit in USD
-  * supplier_name (TEXT): Supplier company name
-  * supplier_contact (TEXT): Contact email
-  * min_stock_level (INTEGER): Minimum stock threshold
-  * max_stock_level (INTEGER): Maximum stock capacity
-
-TABLE: products
-- Description: Manufactured products with costs and pricing
-- Columns:
-  * product_id (TEXT): Unique ID (format: PROD_XXX)
-  * name (TEXT): Product name (Artisan Bread, Chocolate Chip Cookies, etc.)
-  * description (TEXT): Product description
-  * category (TEXT): Bakery, Prepared Foods, Sauces, Snacks, Beverages
-  * unit_price (REAL): Selling price in USD
-  * production_cost (REAL): Cost to produce in USD
-  * unit_measure (TEXT): loaf, dozen, cake, pizza, can, jar, box, etc.
-  * shelf_life_days (INTEGER): Product shelf life in days
-  * is_active (BOOLEAN): 1=active, 0=inactive
-
-TABLE: recipes
-- Description: Bill of Materials (BOM) - raw materials needed per product
-- Columns:
-  * recipe_id (TEXT): Unique ID (format: RCP_XXXXXX)
-  * product_id (TEXT): References products.product_id
-  * raw_material_id (TEXT): References raw_materials.raw_material_id
-  * quantity_needed (REAL): Amount of raw material needed
-  * waste_percentage (REAL): Expected waste percentage (2-8%)
-  * is_active (BOOLEAN): Recipe status
-
-TABLE: production_orders
-- Description: Orders for manufacturing products
-- Columns:
-  * production_order_id (TEXT): Unique ID (format: PO_XXXXXX)
-  * product_id (TEXT): Product to manufacture
-  * planned_quantity (INTEGER): Quantity to produce
-  * order_date (DATETIME): When order was placed
-  * planned_start_date (DATETIME): Planned production start
-  * planned_end_date (DATETIME): Planned completion
-  * actual_start_date (DATETIME): Actual start (if started)
-  * actual_end_date (DATETIME): Actual completion (if completed)
-  * status (TEXT): planned, in_progress, completed, cancelled
-  * warehouse_id (TEXT): Production warehouse
-  * priority (TEXT): low, normal, high, urgent
-
-TABLE: production_batches
-- Description: Individual production batches with quality data
-- Columns:
-  * batch_id (TEXT): Unique ID (format: BATCH_XXXXXX)
-  * production_order_id (TEXT): References production_orders
-  * batch_number (TEXT): Human-readable batch number
-  * produced_quantity (INTEGER): Actual quantity produced
-  * quality_grade (TEXT): A, B, C quality grades
-  * production_date (DATETIME): When batch was produced
-  * expiry_date (DATETIME): Product expiration date
-  * production_line (TEXT): Line_A, Line_B, Line_C, Line_D
-  * operator_name (TEXT): Production operator
-
-==== CUSTOMERS & ORDERS ====
-TABLE: customers
-- Description: Customer information (distributors, wholesale, retail)
-- Columns:
-  * customer_id (TEXT): Unique ID (format: CUST_XXX)
-  * name (TEXT): Customer full name
-  * email (TEXT): Email address
-  * phone (TEXT): Phone number
-  * address (TEXT): Street address
-  * city (TEXT): City name
-  * state (TEXT): US state code (FL, TX, CA, etc.)
-  * postal_code (TEXT): ZIP code
-  * customer_type (TEXT): distributor, wholesale, retail
-  * credit_limit (REAL): Credit limit in USD
-  * payment_terms (TEXT): Payment terms (cash, 7 days, 15 days, 30 days)
-
-TABLE: customer_orders
-- Description: Customer orders with delivery requirements
-- Columns:
-  * order_id (TEXT): Unique ID (format: ORD_XXXXXX)
-  * customer_id (TEXT): References customers.customer_id
-  * order_date (DATETIME): Order placement date
-  * requested_delivery_date (DATETIME): Customer requested delivery
-  * order_status (TEXT): pending, confirmed, in_production, ready, shipped, delivered
-  * total_amount (REAL): Total order value in USD
-  * payment_method (TEXT): cash, credit_card, bank_transfer, check, credit_terms
-  * sales_rep (TEXT): Sales representative name
-  * special_instructions (TEXT): Special delivery/handling notes
-
-TABLE: order_details
-- Description: Line items for customer orders
-- Columns:
-  * order_id (TEXT): References customer_orders.order_id
-  * product_id (TEXT): References products.product_id
-  * quantity_ordered (INTEGER): Quantity requested
-  * unit_price (REAL): Price per unit
-  * line_total (REAL): Total for this line item
-  * production_priority (TEXT): low, normal, high, urgent
-
-==== INVENTORY & WAREHOUSES ====
-TABLE: warehouses
-- Description: Storage facilities with capacity and management
-- Columns:
-  * warehouse_id (TEXT): Unique ID (format: WH_XXX)
-  * name (TEXT): Warehouse name
-  * address (TEXT): Physical address
-  * city (TEXT): City location
-  * warehouse_type (TEXT): production, distribution, cold_storage, raw_materials, quality_control
-  * max_capacity (INTEGER): Maximum capacity
-  * current_utilization (REAL): Current usage percentage
-  * manager_name (TEXT): Warehouse manager
-
-TABLE: product_inventory
-- Description: Finished product inventory by warehouse and batch
-- Columns:
-  * product_id (TEXT): References products.product_id
-  * warehouse_id (TEXT): References warehouses.warehouse_id
-  * batch_id (TEXT): References production_batches.batch_id
-  * available_quantity (INTEGER): Available for sale
-  * reserved_quantity (INTEGER): Reserved for orders
-  * production_date (DATETIME): When produced
-  * expiry_date (DATETIME): Expiration date
-  * quality_grade (TEXT): A, B, C quality
-  * location_code (TEXT): Physical location in warehouse
-
-TABLE: raw_material_inventory
-- Description: Raw material inventory by warehouse
-- Columns:
-  * raw_material_id (TEXT): References raw_materials.raw_material_id
-  * warehouse_id (TEXT): References warehouses.warehouse_id
-  * available_quantity (INTEGER): Available for production
-  * reserved_quantity (INTEGER): Reserved for production orders
-  * last_received_date (DATETIME): Last delivery date
-  * location_code (TEXT): Physical location code
-
-TABLE: backorders
-- Description: Orders that cannot be fulfilled immediately
-- Columns:
-  * backorder_id (TEXT): Unique ID (format: BO_XXXXXX)
-  * order_id (TEXT): References customer_orders.order_id
-  * product_id (TEXT): References products.product_id
-  * quantity_pending (INTEGER): Quantity still needed
-  * original_due_date (DATETIME): Original promised date
-  * new_promised_date (DATETIME): New promised delivery
-  * priority (TEXT): low, normal, high, urgent
-  * reason (TEXT): out_of_stock, production_delay, quality_issue, raw_material_shortage
-  * warehouse_id (TEXT): Fulfillment warehouse
-
-==== DISTRIBUTION & LOGISTICS ====
-TABLE: routes
-- Description: Delivery routes with vehicle and driver information
-- Columns:
-  * route_id (TEXT): Unique ID (format: RT_XXX)
-  * route_name (TEXT): Route name
-  * description (TEXT): Route description
-  * assigned_vehicle (TEXT): Vehicle ID (TRUCK-XXX, VAN-XXX)
-  * driver_name (TEXT): Driver full name
-  * driver_phone (TEXT): Driver contact number
-  * max_capacity_kg (REAL): Weight capacity in kg
-  * max_capacity_volume (REAL): Volume capacity
-  * coverage_zone (TEXT): Coverage area
-  * is_active (BOOLEAN): Route status
-
-TABLE: shipments
-- Description: Shipment tracking with capacity utilization
-- Columns:
-  * shipment_id (TEXT): Unique ID (format: SHIP_XXXXXX)
-  * route_id (TEXT): References routes.route_id
-  * shipment_date (DATETIME): Shipment date
-  * departure_warehouse_id (TEXT): Origin warehouse
-  * total_weight (REAL): Total shipment weight
-  * total_volume (REAL): Total shipment volume
-  * number_of_orders (INTEGER): Orders in shipment
-  * departure_time (DATETIME): Departure time
-  * estimated_return_time (DATETIME): Expected return
-  * shipment_status (TEXT): loading, in_transit, delivered, returned
-
-TABLE: delivery_details
-- Description: Individual delivery tracking per order
-- Columns:
-  * delivery_id (TEXT): Unique ID (format: DEL_XXXXXX)
-  * shipment_id (TEXT): References shipments.shipment_id
-  * order_id (TEXT): References customer_orders.order_id
-  * delivery_sequence (INTEGER): Order in delivery route
-  * estimated_delivery_time (DATETIME): Estimated delivery
-  * actual_delivery_time (DATETIME): Actual delivery time
-  * delivery_status (TEXT): pending, delivered, failed, rescheduled
-  * customer_signature (TEXT): Delivery confirmation
-  * delivery_notes (TEXT): Delivery notes
-
-==== TRACKING & MOVEMENTS ====
-TABLE: inventory_movements
-- Description: All inventory transactions and movements
-- Columns:
-  * movement_id (TEXT): Unique ID (format: MOV_XXXXXX)
-  * movement_type (TEXT): production, sale, transfer, adjustment
-  * product_id (TEXT): References products.product_id
-  * warehouse_id (TEXT): References warehouses.warehouse_id
-  * batch_id (TEXT): References production_batches.batch_id
-  * quantity (INTEGER): Movement quantity (positive=in, negative=out)
-  * movement_date (DATETIME): Movement timestamp
-  * reference_id (TEXT): Reference to related transaction
-  * notes (TEXT): Movement description
-
-TABLE: raw_material_consumption
-- Description: Raw material usage in production
-- Columns:
-  * consumption_id (TEXT): Unique ID (format: CONS_XXXXXX)
-  * production_order_id (TEXT): References production_orders
-  * raw_material_id (TEXT): References raw_materials
-  * quantity_consumed (REAL): Amount consumed
-  * consumption_date (DATETIME): Consumption date
-  * batch_number (TEXT): Production batch reference
-  * waste_quantity (REAL): Amount wasted
-
-==== KEY RELATIONSHIPS ====
-- recipes.product_id → products.product_id
-- recipes.raw_material_id → raw_materials.raw_material_id
-- production_orders.product_id → products.product_id
-- production_batches.production_order_id → production_orders.production_order_id
-- customer_orders.customer_id → customers.customer_id
-- order_details.order_id → customer_orders.order_id
-- order_details.product_id → products.product_id
-- product_inventory.batch_id → production_batches.batch_id
-- backorders.order_id → customer_orders.order_id
-- shipments.route_id → routes.route_id
-- delivery_details.shipment_id → shipments.shipment_id
-
-==== SAMPLE DATA VOLUMES ====
-- 25 raw materials with supplier info
-- 30 manufactured products across 5 categories
-- 300 production orders (2024-2025)
-- 120 customers (20 distributors, 30 wholesale, 70 retail)
-- 800 customer orders with details
-- 6 specialized warehouses
-- 150 backorder records
-- 10 delivery routes with drivers
-- 200 shipments with tracking
-- 1,500 inventory movement records
-"""
+# Schema functions removed - Using focused manufacturing schema instead
 
 # 🚀 OPTIMIZED Query Analysis & Routing (Spanish + English)
 def analyze_query_complexity(query: str) -> dict:
@@ -816,85 +931,73 @@ def execute_direct_llm_with_tools(query: str, schema_context: str) -> str:
     print(f"   📋 Schema context: {len(schema_context)} chars")
     print(f"   🧠 Memory context: {len(memory_context)} chars")
     
-    # Enhanced prompt for demo mode with realistic data generation
-    direct_prompt = f"""🎭 DEMO MODE - MANUFACTURING COMPANY ANALYSIS EXECUTOR
-
-🚨 CRITICAL DEMO INSTRUCTIONS:
-- You are demonstrating a REAL manufacturing company system
-- NEVER say "no data found", "zero results", or "empty tables"
-- If SQL returns empty results, generate REALISTIC demo data with SPECIFIC NUMBERS immediately
-- NEVER use placeholders like "$Value 1", "$Value 2" - use actual realistic numbers
-- Act as if all data is completely authentic and the company is thriving
-- Provide confident, professional analysis as if you're a senior business analyst
-- Use specific monetary amounts: $12,450.00, $8,750.50, etc.
-- Use specific quantities: 1,250 units, 875 units, etc.
-- Create realistic business scenarios with actual performance metrics
+    # 🌍 ALWAYS COMPREHENSIVE ANALYSIS: Generate external factors for ALL queries
+    external_factors = generate_external_factors()
+    
+    direct_prompt = f"""🏭 MANUFACTURING & SUPPLY CHAIN INTELLIGENCE ANALYST
 
 QUERY: {query}
+SCHEMA: {schema_context}
 
-MEMORY: {memory_context}
+MANUFACTURING CONTEXT:
+- Company: Manufacturing company with 30 products across 5 categories
+- Focus: Bakery, Prepared Foods, Sauces, Snacks, Beverages
+- Operations: 6 warehouses, 120+ customers, production lines, supply chain
 
-SCHEMA CONTEXT:
-{schema_context}
+🌍 CURRENT MARKET INTELLIGENCE:
+- **Noticias del sector:** {external_factors['news']}
+- **Tendencia de mercado:** {external_factors['market']}
+- **Panorama competitivo:** {external_factors['competition']}
+- **Factor climático:** {external_factors['weather']}
+- **Sentimiento del mercado:** {external_factors['market_sentiment']}
+- **Estado supply chain:** {external_factors['supply_chain_status']}
+- **{external_factors['economic_indicator']}**
 
-EXECUTION WORKFLOW:
-1. Execute ONE comprehensive SQL query using query_database tool - avoid multiple separate queries
-2. If SQL returns empty/null results → IMMEDIATELY generate realistic demo data with SPECIFIC NUMBERS
-3. Present all results with confidence as if they're real company data
-4. Use professional business language and provide actionable insights
-5. Format monetary amounts with $ symbol (e.g., $125,750.00)
+🎯 MANDATORY STRUCTURE FOR ALL RESPONSES:
 
-🚫 AVOID MULTIPLE QUERIES: Instead of running 4-5 separate queries, create ONE comprehensive analysis
-✅ GOOD: Single query with JOINs, CTEs, or comprehensive analysis
-❌ BAD: Multiple similar queries for the same analysis
+📊 **RESPUESTA DIRECTA CON DATOS**
+[Responde la pregunta específicamente con números exactos de query_database]
 
-DEMO DATA GENERATION RULES:
-- Generate SPECIFIC numbers, not placeholders: $287,450.00 not "$Value 1"
-- Sales figures: $50K-$500K per month range with exact amounts
-- Product inventory: 100-5000 units per product with precise counts
-- Customer orders: 20-200 orders per month with exact order numbers
-- Production volumes: 1000-10000 units per product line with specific quantities
-- Use realistic business scenarios and growth trends with actual percentages
-- Include month-over-month comparisons with real percentage changes
-- Q4 PRODUCT EXAMPLE: Month 1: $18,750.00 (1,250 units), Month 2: $22,340.00 (1,489 units), Month 3: $27,890.00 (1,859 units)
+🔍 **ROOT-CAUSE ANALYSIS OBLIGATORIO** 
+- **Causa primaria:** [Factor específico basado en market intelligence]
+- **Causa secundaria:** [Factor interno relacionado con los datos]
+- **Factor externo:** [Cómo el contexto de mercado contribuye al resultado]
 
-🎯 DEMO MINDSET: This is a successful manufacturing company with:
-- 30 products across 5 categories (Bakery, Prepared Foods, Sauces, Snacks, Beverages)
-- 120+ active customers (distributors, wholesale, retail)
-- 6 warehouses with optimized operations
-- Growing business with positive trends
+💡 **RECOMENDACIONES ESPECÍFICAS OBLIGATORIAS**
+- **Productos/acciones específicas:** [Nombres exactos de los datos con razón específica]
+- **Mejora cuantificada:** [Número específico: +X% aumento, +$Y adicional, Z semanas timeline]
+- **Estrategia de mercado:** [Acción específica que aproveche/mitigue factores externos mencionados]
 
-TOOLS: query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate
+🎯 **PLAN DE ACCIÓN ESPECÍFICO**
+1. **Inmediata (1-2 semanas):** [Acción específica con inversión $X]
+2. **Corto plazo (1 mes):** [Acción que considere competencia/mercado específico]
+3. **Mediano plazo (2-3 meses):** [Acción que aproveche tendencias externas específicas]
 
-Execute now with full demo confidence:"""
+RULES:
+1. Use query_database ALWAYS first (generates realistic manufacturing demo data)
+2. INCLUDE specific product names, numbers, and timelines from data
+3. EXPLAIN why results occur based on market intelligence above
+4. GIVE quantified improvements and specific investments required
+5. REFERENCE external factors mentioned above in recommendations
+
+Execute:"""
     
     try:
         # Execute with tools using React Agent for reliability
         tools = [query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate, 
                  find_product_by_name, get_best_product_id, search_products_batch]
         
-        # Use React Agent for direct execution to ensure tool calls work
-        direct_agent = create_react_agent(direct_llm, tools)
+        # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead)
+        direct_llm_with_tools = direct_llm.bind_tools(tools)
         
-        print(f"   🔧 Executing with React agent and tools...")
+        print(f"   🔧 Executing with direct LLM + bound tools (optimized)...")
         
-        # Execute with react agent
-        agent_input = {"messages": [HumanMessage(content=direct_prompt)]}
-        response = direct_agent.invoke(agent_input)
+        # Execute directly with bound tools
+        response = direct_llm_with_tools.invoke([HumanMessage(content=direct_prompt)])
         
-        # Extract response from React agent
-        if 'messages' in response:
-            messages = response['messages']
-            ai_messages = [msg for msg in messages if hasattr(msg, 'content') and hasattr(msg, 'type') and msg.type == 'ai']
-            if ai_messages:
-                final_content = ai_messages[-1].content
-                print(f"   ✅ Direct execution successful: {len(final_content)} chars")
-            else:
-                final_content = "Error: No AI response found in messages"
-                print(f"   ❌ No AI messages found in response")
-        else:
-            final_content = str(response)
-            print(f"   ⚠️ Unexpected response format, using string conversion")
+        # 🚀 OPTIMIZED: Execute tool calls and get final content
+        final_content = execute_tool_calls(response, tools)
+        print(f"   ✅ Direct execution successful: {len(final_content)} chars")
         
         # Store in memory if available
         if current_memory:
@@ -997,70 +1100,52 @@ def get_selective_memory_context(query: str) -> str:
     return ""
 
 def get_focused_schema(query: str) -> str:
-    """Return relevant schema subset based on query keywords - Bilingual Support"""
+    """🏭 MANUFACTURING schema builder - Focused on manufacturing/retail/supply chain"""
     query_lower = query.lower()
     
-    # Core tables always included with clear purposes
-    core_schema = """
-TABLE: products - PRODUCT CATALOG: product_id, name, category, unit_price, production_cost, is_active
-TABLE: customers - CUSTOMER INFO: customer_id, name, customer_type, city, state  
-TABLE: customer_orders - CUSTOMER ORDERS: order_id, customer_id, order_date, order_status, total_amount
-TABLE: order_details - ORDER LINE ITEMS: order_id, product_id, quantity_ordered, unit_price, line_total
-"""
+    # 🏭 CORE MANUFACTURING TABLES (always available)
+    manufacturing_tables = {
+        "products": "product_id, name, category, unit_price, production_cost, is_active",
+        "customers": "customer_id, name, customer_type, city, state", 
+        "customer_orders": "order_id, customer_id, order_date, total_amount, order_status",
+        "order_details": "order_id, product_id, quantity_ordered, unit_price",
+        "product_inventory": "product_id, warehouse_id, available_quantity, reserved_quantity",
+        "warehouses": "warehouse_id, name, warehouse_type, manager_name",
+        "production_batches": "batch_id, product_id, produced_quantity, production_date, quality_grade",
+        "backorders": "backorder_id, order_id, product_id, quantity_pending, reason",
+        "suppliers": "supplier_id, name, category, rating, payment_terms",
+        "raw_materials": "material_id, name, cost_per_unit, supplier_id, stock_level"
+    }
     
-    # Add relevant tables based on keywords (bilingual)
-    extensions = {}
+    # Select relevant manufacturing tables based on query
+    selected_tables = ["products", "customers", "customer_orders", "order_details"]  # Always include core
     
-    # Inventory keywords (Spanish + English)
-    if any(word in query_lower for word in ['inventory', 'inventario', 'stock', 'bodega', 'warehouse', 'storage']):
-        extensions['inventory'] = "TABLE: product_inventory - FINISHED GOODS INVENTORY: product_id, warehouse_id, available_quantity, reserved_quantity, batch_id"
-        extensions['warehouses'] = "TABLE: warehouses - STORAGE LOCATIONS: warehouse_id, name, warehouse_type, manager_name"
+    # Add specific manufacturing tables based on keywords
+    if any(word in query_lower for word in ['inventory', 'inventario', 'stock', 'bodega', 'warehouse']):
+        selected_tables.extend(["product_inventory", "warehouses"])
     
-    # Backorder keywords (Spanish + English)
-    if any(word in query_lower for word in ['backorder', 'pendiente', 'atras', 'pending', 'overdue', 'delayed']):
-        extensions['backorders'] = "TABLE: backorders - backorder_id, order_id, product_id, quantity_pending, reason"
+    if any(word in query_lower for word in ['production', 'produccion', 'manufactur', 'batch']):
+        selected_tables.extend(["production_batches", "raw_materials"])
     
-    # Production keywords (Spanish + English)
-    if any(word in query_lower for word in ['production', 'produccion', 'producir', 'produce', 'manufactur', 'fabric', 'manufacturing', 'make', 'build']):
-        extensions['production_planning'] = "TABLE: production_orders - PRODUCTION PLANNING: production_order_id, product_id, planned_quantity, status, order_date"
-        extensions['actual_production'] = "TABLE: production_batches - ACTUAL PRODUCTION (USE FOR PRODUCTION REPORTS): batch_id, production_order_id, produced_quantity, production_date, quality_grade"
-        extensions['raw_materials'] = "TABLE: raw_materials - RAW MATERIALS: raw_material_id, name, cost_per_unit, supplier_name"
-    
-    # Delivery/Logistics keywords (Spanish + English)
-    if any(word in query_lower for word in ['delivery', 'entrega', 'route', 'ruta', 'shipping', 'logistics', 'transport', 'fleet']):
-        extensions['routes'] = "TABLE: routes - route_id, route_name, driver_name"
-        extensions['shipments'] = "TABLE: shipments - shipment_id, route_id, shipment_status"
-    
-    # Financial keywords (Spanish + English)
-    if any(word in query_lower for word in ['cost', 'costo', 'price', 'precio', 'profit', 'ganancia', 'revenue', 'ingresos', 'financial', 'financiero']):
-        extensions['financials'] = "TABLE: products - PRICING: product_id, unit_price, production_cost (for profit analysis)"
+    if any(word in query_lower for word in ['backorder', 'pendiente', 'pending']):
+        selected_tables.append("backorders")
         
-    # Sales keywords (Spanish + English)  
-    if any(word in query_lower for word in ['sales', 'ventas', 'sell', 'vender', 'revenue', 'ingresos', 'orders', 'pedidos']):
-        # Core tables already include sales data, but can add specific notes
-        pass
+    if any(word in query_lower for word in ['supplier', 'proveedor', 'material']):
+        selected_tables.extend(["suppliers", "raw_materials"])
     
-    # Build focused schema
-    focused = f"MANUFACTURING SCHEMA (focused):\n{core_schema}"
-    for table_schema in extensions.values():
-        focused += f"\n{table_schema}"
+    # Remove duplicates and limit to 6 tables for performance
+    selected_tables = list(dict.fromkeys(selected_tables))[:6]
     
-    focused += f"\n\nQuery: '{query}'\n\n⚠️ CRITICAL RULES:\n"
+    # Build manufacturing-focused schema
+    schema_lines = []
+    for table in selected_tables:
+        if table in manufacturing_tables:
+            schema_lines.append(f"{table}: {manufacturing_tables[table]}")
     
-    # Add specific production guidance if production tables are included
-    if 'actual_production' in extensions:
-        focused += """
-🎯 PRODUCTION QUERIES (English/Spanish):
-- For "cuánta producción"/"production this month" → USE production_batches table with produced_quantity and production_date
-- For "órdenes de producción"/"production planning" → USE production_orders table with planned_quantity and order_date
-- NEVER use production_order_id in date comparisons (it's TEXT, not DATE)
-
-EXAMPLE: Production this month = SELECT SUM(produced_quantity) FROM production_batches WHERE strftime('%Y-%m', production_date) = strftime('%Y-%m', 'now')
-"""
+    schema_summary = f"MANUFACTURING TABLES: {' | '.join(schema_lines)}"
+    print(f"   🏭 Manufacturing schema: {len(selected_tables)} tables selected")
     
-    focused += "\n⚠️ Use EXACT table/column names shown above."
-    
-    return focused
+    return schema_summary
 
 # Function to get relevant schema
 def get_schema_context(state):
@@ -1195,10 +1280,10 @@ def create_executor_with_context(state):
         if current_memory:
             memory_context = current_memory.get_memory_context()
         
-        # Create executor with all tools available
+        # 🚀 OPTIMIZED: Direct LLM with bound tools (no React Agent overhead)
         tools = [query_database, sales_agent, finance_agent, inventory_agent, field_ops_agent, calculate, 
                 find_product_by_name, get_best_product_id, search_products_batch, check_product_index_status]
-        executor_agent = create_react_agent(executor_llm, tools)
+        executor_llm_with_tools = executor_llm.bind_tools(tools)
         
         # Enhanced prompt for dynamic tool usage
         executor_prompt = f"""🤖 STEP EXECUTOR
@@ -1220,43 +1305,19 @@ RULES:
 Execute now:"""
         
         try:
-            # Execute with tools using react agent
-            print(f"   🔧 Invoking REACT executor agent with tools...")
+            # 🚀 OPTIMIZED: Execute with direct LLM + bound tools
+            print(f"   🔧 Invoking direct LLM executor with bound tools (optimized)...")
             
-            # For react agent, we need to pass messages in the correct format
-            agent_input = {"messages": [HumanMessage(content=executor_prompt)]}
-            response = executor_agent.invoke(agent_input)
+            # Direct invocation with bound tools
+            response = executor_llm_with_tools.invoke([HumanMessage(content=executor_prompt)])
             
-            # Extract the final message and tool usage from react agent response
+            # 🚀 OPTIMIZED: Execute tool calls and get final content
+            final_message = execute_tool_calls(response, tools)
+            
+            # Extract tool names for compatibility (simplified version)
             tools_used = []
-            final_message = ""
-            
-            if 'messages' in response:
-                messages = response['messages']
-                print(f"   📝 Agent executed {len(messages)} messages")
-                
-                # Look for tool calls in messages
-                for msg in messages:
-                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
-                        for tool_call in msg.tool_calls:
-                            tool_name = tool_call.get('name', 'unknown')
-                            tools_used.append(tool_name)
-                            print(f"      🛠️ Tool executed: {tool_name}")
-                            
-                            # Show SQL for database queries
-                            if tool_name == 'query_database' and 'args' in tool_call:
-                                query_arg = tool_call['args'].get('query', 'No query found')
-                                print(f"      📊 SQL Preview: {query_arg[:100]}...")
-                
-                # Get the final AI message
-                ai_messages = [msg for msg in messages if hasattr(msg, 'content') and hasattr(msg, 'type') and msg.type == 'ai']
-                if ai_messages:
-                    final_message = ai_messages[-1].content
-                else:
-                    final_message = str(response)
-            else:
-                final_message = str(response)
-                print(f"   ⚠️ Unexpected response format from react agent")
+            if hasattr(response, 'tool_calls') and response.tool_calls:
+                tools_used = [tool_call.get('name', 'unknown') for tool_call in response.tool_calls]
             
             # Store results in memory if database was used
             if current_memory and 'query_database' in tools_used:
