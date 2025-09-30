@@ -6,6 +6,7 @@ INSTRUCCIONES:
 - Para calcular el total neto solamente debes sumar la columna total_neto no necesitas calculos adicionales
 - Para calcular el total bruto solamente debes sumar la columna total_bruto no necesitas calculos adicionales
 - La forma correcta de obtener un producto a partir de esta tabla es inner join productos on transacciones.producto_id = productos.producto_id
+- Usa year(fecha) month(fecha) para optimizar el query de busqueda por rango de fecha
 
 EJEMPLOS DE PREGUNTAS PARA ESTA TABLA:
 - Cuales fueron mis ventas brutas del mes de agosto del 2023?
